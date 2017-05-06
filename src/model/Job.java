@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 /**
  * Модель задания
- *
+ * <p>
  * Created by Andrey Semenyuk on 2017.
  */
 public class Job {
@@ -14,6 +14,13 @@ public class Job {
     private JobState state;
     private LocalDateTime executeDate;
     private Airplane airplane;
+
+    public Job(int id, String name, String state, LocalDateTime executeDate) {
+        this.id = id;
+        this.name = name;
+        this.state = JobState.valueOf(state);
+        this.executeDate = executeDate;
+    }
 
     public int getId() {
         return id;

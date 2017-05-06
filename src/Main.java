@@ -1,18 +1,15 @@
-import Handlers.DbHandler;
-import utils.LogUtils;
 import controllers.MainController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import utils.LogUtils;
 
-import java.sql.SQLException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * Основной класс приложения
- *
+ * <p>
  * Created by Andrey Semenyuk on 2017.
  */
 public class Main extends Application {
@@ -21,6 +18,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+
         Updater updater = Updater.getInstance();
 
         // проверяем обновления
@@ -35,7 +33,14 @@ public class Main extends Application {
         MainController controller = loader.getController();
         controller.setVersion(updater.getVersion());
         controller.setPrimaryStage(primaryStage);
+        primaryStage.setOnCloseRequest(windowEvent -> {
+            logger.info("Close application");
+            Scheduler.stop();
+        });
         primaryStage.show();
+
+
+        Scheduler.jobs();
     }
 
     public static void main(String[] args) {
