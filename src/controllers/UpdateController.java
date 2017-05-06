@@ -1,7 +1,6 @@
 package controllers;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
 
@@ -10,8 +9,6 @@ import javafx.stage.Stage;
  */
 public class UpdateController {
 
-    @FXML
-    private Button okButton;
     @FXML
     private Label detailsLabel;
 

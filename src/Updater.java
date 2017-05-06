@@ -8,22 +8,27 @@ import javafx.stage.Stage;
 import java.io.*;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
  * Created by Andrey Semenyuk on 2017.
  */
-public class Updater extends Thread {
+class Updater {
 
+    private final static Logger logger = Log.getLogger();
     private final static String BASE_URL = "http://ekb.qilnet.ru:8080";
     private static String version;
+    private static Stage primaryStage;
 
-    Updater(String version) {
-        this.version = version;
+    Updater(Stage primaryStage, String version) {
+        Updater.primaryStage = primaryStage;
+        Updater.version = version;
     }
 
-    public void start() {
+    void start() {
 
         cleanup();
 
@@ -31,8 +36,8 @@ public class Updater extends Thread {
             if (checkUpdateNeed()) {
                 update();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, ex.getMessage(), ex);
         }
     }
 
@@ -51,7 +56,7 @@ public class Updater extends Thread {
         BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
         String lastVersion = br.readLine();
 
-        System.out.println("Check update >> current version: " + version + ", last version: " + lastVersion);
+        logger.info("Check new version result: current version=" + version + ", lastVersion=" + lastVersion);
 
         if (version.equals(lastVersion)) {
             return false;
@@ -61,19 +66,22 @@ public class Updater extends Thread {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(getClass().getResource("view/UpdateDialog.fxml"));
             GridPane page = loader.load();
+
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Обновление");
-            dialogStage.initModality(Modality.WINDOW_MODAL);
-            Scene scene = new Scene(page);
-            dialogStage.setScene(scene);
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.initOwner(primaryStage);
+            dialogStage.setResizable(false);
+            dialogStage.setScene(new Scene(page));
 
             UpdateController controller = loader.getController();
             controller.setVersion(lastVersion);
             controller.setDialogStage(dialogStage);
             dialogStage.showAndWait();
+
             return controller.isOkClicked();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, "Failed to load update dialog view: ", ex);
         }
 
         return false;
@@ -81,13 +89,21 @@ public class Updater extends Thread {
 
     private void update() {
         Thread worker = new Thread(() -> {
+            String updateFileLink = BASE_URL + "/update.zip";
+
             try {
-                downloadFile(BASE_URL + "/update.zip");
-                unzip();
-                launchUpdate();
-            } catch (Exception ex) {
-                System.out.println("error");
+                downloadFile(updateFileLink);
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, "Failed to download file " + updateFileLink + ": ", ex);
             }
+
+            try {
+                unzip();
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, "Failed to unpacking update.zip: ", ex);
+            }
+
+            launchUpdate();
         });
 
         worker.start();
@@ -146,32 +162,15 @@ public class Updater extends Thread {
     }
 
     private void launchUpdate() {
+
         String[] run = {"java", "-jar", "update.jar"};
 
         try {
             Runtime.getRuntime().exec(run);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "Failed to launch update", ex);
         }
 
         System.exit(0);
     }
-
-/*
-    private String getDownloadLinkFromHost() throws IOException {
-
-        InputStream html = new URL(BASE_URL + "/url").openConnection().getInputStream();
-
-        int c = 0;
-        StringBuilder buffer = new StringBuilder("");
-
-        while (c != -1) {
-            c = html.read();
-            buffer.append((char) c);
-        }
-
-        return buffer.toString();
-    }
-*/
-
 }

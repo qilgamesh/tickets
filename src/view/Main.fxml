@@ -9,7 +9,7 @@
    <top>
       <MenuBar accessibleRole="MENU_ITEM" nodeOrientation="RIGHT_TO_LEFT" BorderPane.alignment="CENTER">
         <menus>
-          <Menu mnemonicParsing="false" text="Помощь">
+          <Menu mnemonicParsing="false" text="Справка">
                <items>
               <MenuItem mnemonicParsing="false" onAction="#handleAbout" text="О программе" />
                </items></Menu>

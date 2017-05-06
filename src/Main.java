@@ -4,9 +4,15 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import java.util.logging.Logger;
+
+/**
+ * Created by Andrey Semenyuk on 2017.
+ */
 public class Main extends Application {
 
-    private final static String VERSION = "0.0.2";
+    private final static String VERSION = "0.0.1";
+    private final static Logger logger = Log.getLogger();
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -19,7 +25,7 @@ public class Main extends Application {
         controller.setVersion(VERSION);
         primaryStage.show();
 
-        new Updater(VERSION).start();
+        new Updater(primaryStage, VERSION).start();
     }
 
     public static void main(String[] args) {
