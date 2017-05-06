@@ -1,3 +1,5 @@
+import Handlers.DbHandler;
+import utils.LogUtils;
 import controllers.UpdateController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -8,53 +10,91 @@ import javafx.stage.Stage;
 import java.io.*;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
+ * Класс для проверки наличия обновлений приложения и его обновления
+ *
  * Created by Andrey Semenyuk on 2017.
  */
-class Updater {
+public class Updater {
 
-    private final static Logger logger = Log.getLogger();
+    private final static Logger logger = LogUtils.getLogger();
     private final static String BASE_URL = "http://ekb.qilnet.ru:8080";
     private static String version;
-    private static Stage primaryStage;
+    private static Updater instance;
 
-    Updater(Stage primaryStage, String version) {
-        Updater.primaryStage = primaryStage;
-        Updater.version = version;
+    private Updater() {
+        Updater.version = getVersion();
     }
 
-    void start() {
+    static Updater getInstance() {
+        if (instance == null) {
+            instance = new Updater();
+        }
+        return instance;
+    }
 
-        cleanup();
+
+    /**
+     * Метод получения версии из манифеста приложения
+     *
+     * @return String текущая версия или null, если версию получить не удалось
+     */
+    String getVersion() {
+
+        if (version != null) {
+            return version;
+        }
 
         try {
-            if (checkUpdateNeed()) {
-                update();
+            Enumeration resources = getClass().getClassLoader().getResources("META-INF/MANIFEST.MF");
+
+            while (resources.hasMoreElements()) {
+                URL url = (URL) resources.nextElement();
+                InputStream stream = url.openStream();
+                Manifest mf = new Manifest(stream);
+                Attributes atts = mf.getMainAttributes();
+
+                String title = atts.getValue(Attributes.Name.IMPLEMENTATION_TITLE);
+
+                if (title != null && title.equals("Tickets")) {
+                    return atts.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+                }
             }
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, ex.getMessage(), ex);
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, "Failed to get version", ex);
         }
+
+        return null;
     }
 
-    private void cleanup() {
+    /**
+     * Проверка необходимости обновления, отрисовка окна с оповещением о необходимости обновления с номером новой версии
+     *
+     * @return true - надо обновить, false - обновление не требуется или проверить не удалось
+     */
+    boolean checkUpdateNeed() {
 
-        File f = new File("update.jar");
-
-        if (f.exists()) {
-            f.delete();
+        if (version == null) {
+            return false;
         }
-    }
 
-    private boolean checkUpdateNeed() throws Exception {
+        String lastVersion;
 
-        URL url = new URL(BASE_URL + "/version");
-        BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
-        String lastVersion = br.readLine();
+        try {
+            URL url = new URL(BASE_URL + "/version");
+            BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
+            lastVersion = br.readLine();
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, "Failed to check update", ex);
+            return false;
+        }
 
         logger.info("Check new version result: current version=" + version + ", lastVersion=" + lastVersion);
 
@@ -70,7 +110,7 @@ class Updater {
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Обновление");
             dialogStage.initModality(Modality.APPLICATION_MODAL);
-            dialogStage.initOwner(primaryStage);
+//            dialogStage.initOwner(primaryStage);
             dialogStage.setResizable(false);
             dialogStage.setScene(new Scene(page));
 
@@ -87,28 +127,54 @@ class Updater {
         return false;
     }
 
-    private void update() {
-        Thread worker = new Thread(() -> {
-            String updateFileLink = BASE_URL + "/update.zip";
+    /**
+     * Главный метод обновления: удаляет старые обновления, если остались,
+     * скачивает новый архив с обнолениями, извлекает во временную папку и запускает программу обновления
+     */
+    void start() {
 
-            try {
-                downloadFile(updateFileLink);
-            } catch (IOException ex) {
-                logger.log(Level.SEVERE, "Failed to download file " + updateFileLink + ": ", ex);
-            }
+        File f = new File("update.jar");
 
-            try {
-                unzip();
-            } catch (IOException ex) {
-                logger.log(Level.SEVERE, "Failed to unpacking update.zip: ", ex);
-            }
+        if (f.exists()) {
+            f.delete();
+        }
 
-            launchUpdate();
-        });
+        String updateFileLink = BASE_URL + "/update.zip";
 
-        worker.start();
+        try {
+            downloadFile(updateFileLink);
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, "Failed to download file " + updateFileLink + ": ", ex);
+            return;
+        }
+
+        try {
+            unzip();
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, "Failed to unpacking update.zip: ", ex);
+            return;
+        }
+
+        logger.info("Launching update");
+
+        String[] run = {"java", "-jar", "update.jar"};
+
+        try {
+            Runtime.getRuntime().exec(run);
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "Failed to launch update", ex);
+            return;
+        }
+
+        System.exit(0);
     }
 
+    /**
+     * Скачивание обновления
+     *
+     * @param link ссылка на архив с обновлениями
+     * @throws IOException
+     */
     private void downloadFile(String link) throws IOException {
 
         InputStream is = new URL(link).openConnection().getInputStream();
@@ -125,6 +191,12 @@ class Updater {
         is.close();
     }
 
+
+    /**
+     * Распаковка архива с обновлениями
+     *
+     * @throws IOException
+     */
     private void unzip() throws IOException {
 
         int BUFFER = 2048;
@@ -159,18 +231,5 @@ class Updater {
 
         zipfile.close();
         new File("update.zip").delete();
-    }
-
-    private void launchUpdate() {
-
-        String[] run = {"java", "-jar", "update.jar"};
-
-        try {
-            Runtime.getRuntime().exec(run);
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, "Failed to launch update", ex);
-        }
-
-        System.exit(0);
     }
 }
