@@ -28,7 +28,7 @@ public class LogUtils {
         FileHandler logFile = new FileHandler("logs/tickets.log", true);
         logFile.setFormatter(new Formatter() {
             public String format(LogRecord record) {
-                return String.format("%s [%s] %s.%s  - %s\n",
+                return String.format("%s [%s] %s.%s  - %s\r\n",
                         SimpleDateFormat.getInstance().format(new Date()),
                         record.getLevel(),
                         record.getSourceClassName(),
