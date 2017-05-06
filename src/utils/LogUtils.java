@@ -2,9 +2,9 @@ package utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.FileHandler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.logging.*;
 
 /**
  * Логгер.
@@ -26,7 +26,16 @@ public class LogUtils {
         }
 
         FileHandler logFile = new FileHandler("logs/tickets.log", true);
-        logFile.setFormatter(new SimpleFormatter());
+        logFile.setFormatter(new Formatter() {
+            public String format(LogRecord record) {
+                return String.format("%s [%s] %s.%s  - %s\n",
+                        SimpleDateFormat.getInstance().format(new Date()),
+                        record.getLevel(),
+                        record.getSourceClassName(),
+                        record.getSourceMethodName(),
+                        record.getMessage());
+            }
+        });
 
         logger.addHandler(logFile);
         initialized = true;
