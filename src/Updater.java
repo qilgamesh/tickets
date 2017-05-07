@@ -30,7 +30,20 @@ public class Updater {
     private static Updater instance;
 
     private Updater() {
+        cleanup();
         Updater.version = getVersion();
+    }
+
+    /**
+     * Удаление updater
+     */
+    private void cleanup() {
+        File f = new File("updater.jar");
+        if (f.exists()) {
+            if (!f.delete()) {
+                logger.warning("Failed to delete updater: " + f.getAbsolutePath());
+            }
+        }
     }
 
     static Updater getInstance() {
@@ -133,12 +146,6 @@ public class Updater {
      */
     void start() {
 
-        File f = new File("update.jar");
-
-        if (f.exists()) {
-            f.delete();
-        }
-
         String updateFileLink = BASE_URL + "/update.zip";
 
         try {
@@ -157,7 +164,7 @@ public class Updater {
 
         logger.info("Launching update");
 
-        String[] run = {"java", "-jar", "update.jar"};
+        String[] run = {"java", "-jar", "updater.jar"};
 
         try {
             Runtime.getRuntime().exec(run);
