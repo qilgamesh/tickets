@@ -1,4 +1,4 @@
-package Handlers;
+package handlers;
 
 import model.Job;
 import org.sqlite.JDBC;
@@ -29,7 +29,7 @@ public class DbHandler {
 
     private final static Logger logger = LogUtils.getLogger();
 
-    public static synchronized DbHandler getInstance() throws SQLException {
+    public static synchronized DbHandler getInstance() {
         if (instance == null) {
             instance = new DbHandler();
         }
@@ -97,19 +97,19 @@ public class DbHandler {
      * @return List - список заданий или пустой список, если произошла ошибка
      */
     public List<Job> getActiveJobs() {
-
+        // для теста
+        return getActiveJobsTest();
+/*
         try (Statement statement = this.connection.createStatement()) {
             List<Job> jobs = new ArrayList<>();
             ResultSet resultSet = statement.executeQuery("SELECT id, name, execute_date, state FROM main.jobs WHERE state = 'active';");
-
-            SimpleDateFormat DFTS = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
             while (resultSet.next()) {
                 jobs.add(new Job(
                         resultSet.getInt("id"),
                         resultSet.getString("name"),
                         resultSet.getString("state"),
-                        resultSet.getTimestamp("execute_date").toLocalDateTime())
+                        resultSet.getString("execute_date"))
                 );
             }
 
@@ -117,7 +117,7 @@ public class DbHandler {
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Failed to get jobs: ", ex);
             return Collections.emptyList();
-        }
+        }*/
     }
 
     /**
@@ -129,10 +129,10 @@ public class DbHandler {
 
         List<Job> jobs = new ArrayList<>();
 
-        jobs.add(new Job(1, "test1", "ACTIVE", LocalDateTime.now().plusMinutes(1)));
-        jobs.add(new Job(2, "test2", "ACTIVE", LocalDateTime.now().plusMinutes(2)));
-        jobs.add(new Job(3, "test3", "ACTIVE", LocalDateTime.now().plusMinutes(3)));
-        jobs.add(new Job(4, "test4", "ACTIVE", LocalDateTime.now().plusMinutes(4)));
+        jobs.add(new Job(1, "test3", "ACTIVE", LocalDateTime.now().plusSeconds(3630).toString()));
+        jobs.add(new Job(3, "test1", "ACTIVE", LocalDateTime.now().plusSeconds(3610).toString()));
+        jobs.add(new Job(2, "test4", "ACTIVE", LocalDateTime.now().plusSeconds(3640).toString()));
+        jobs.add(new Job(4, "test2", "ACTIVE", LocalDateTime.now().plusSeconds(3620).toString()));
 
         return jobs;
     }

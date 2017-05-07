@@ -1,7 +1,9 @@
 import controllers.MainController;
+import handlers.JobHandler;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import utils.LogUtils;
 
@@ -26,13 +28,21 @@ public class Main extends Application {
             updater.start();
         }
 
-        FXMLLoader loader = new FXMLLoader();
-        loader.setLocation(getClass().getResource("view/Main.fxml"));
+        JobHandler jobHandler = JobHandler.getInstance();
+
+        logger.info(jobHandler.getJobs().toString());
+
+        FXMLLoader mainLoader = new FXMLLoader();
+        mainLoader.setLocation(getClass().getResource("view/Main.fxml"));
+        BorderPane mainPane = mainLoader.load();
+        MainController mainController = mainLoader.getController();
+        mainController.setVersion(updater.getVersion());
+        mainController.setPrimaryStage(primaryStage);
+        mainController.setJobs(jobHandler.getJobs());
+
+
+        primaryStage.setScene(new Scene(mainPane));
         primaryStage.setTitle("Tickets");
-        primaryStage.setScene(new Scene(loader.load()));
-        MainController controller = loader.getController();
-        controller.setVersion(updater.getVersion());
-        controller.setPrimaryStage(primaryStage);
         primaryStage.setOnCloseRequest(windowEvent -> {
             logger.info("Close application");
             Scheduler.stop();
@@ -40,7 +50,7 @@ public class Main extends Application {
         primaryStage.show();
 
 
-        Scheduler.jobs();
+        Scheduler.jobs(jobHandler.getJobs());
     }
 
     public static void main(String[] args) {

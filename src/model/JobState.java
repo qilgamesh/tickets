@@ -2,28 +2,23 @@ package model;
 
 /**
  * Перечисление возможных состояний задания
- *
+ * <p>
  * Created by Andrey Semenyuk on 2017.
  */
 public enum JobState {
-    ACTIVE("active", "Активно"),
-    EMPTY("", ""),
-    COMPLETED("completed", "Завершено"),
-    NEW("new", "Новое"),
-    ERROR("error", "Ошибка");
+    ACTIVE("Активно"),
+    EMPTY(""),
+    COMPLETED("Завершено"),
+    NEW("Новое"),
+    ERROR("Ошибка");
 
-    private String id;
     private String description;
 
-    JobState(String id, String description) {
-        this.id = id;
-        this.description = description;
+    public String getDescription() {
+        return description;
     }
 
-    public JobState getById(String id) {
-        for (JobState value: JobState.values()) {
-            if (value.id.equals(id)) return value;
-        }
-        return EMPTY;
+    JobState(String description) {
+        this.description = description;
     }
 }

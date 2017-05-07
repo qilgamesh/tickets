@@ -1,4 +1,3 @@
-import Handlers.DbHandler;
 import utils.LogUtils;
 import controllers.UpdateController;
 import javafx.fxml.FXMLLoader;
