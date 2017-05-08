@@ -1,15 +1,18 @@
 package controllers;
 
+import handlers.JobHandler;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import model.Job;
+import model.Ticket;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 
 /**
@@ -34,12 +37,19 @@ public class MainController {
     private TableColumn<Job, String> stateCol;
 
     private ObservableList<Job> jobs;
+    private JobHandler jobHandler;
 
     @FXML
     private void initialize() {
+
+        jobHandler = JobHandler.getInstance();
+
+        jobs = jobHandler.getJobs();
+        jobsTable.setItems(this.jobs);
+
         nameCol.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
         airplaneCol.setCellValueFactory(cellData -> cellData.getValue().airplaneProperty());
-        ticketsCol.setCellValueFactory(cellData -> cellData.getValue().ticketsProperty().asString());
+        ticketsCol.setCellValueFactory(cellData -> cellData.getValue().ticketsCount());
         departureCol.setCellValueFactory(cellData -> cellData.getValue().departureDateProperty());
         stateCol.setCellValueFactory(cellData -> cellData.getValue().stateProperty());
     }
@@ -63,8 +73,19 @@ public class MainController {
         this.version = version;
     }
 
-    public void setJobs(List<Job> jobs) {
-        this.jobs = FXCollections.observableArrayList(jobs);
-        jobsTable.setItems(this.jobs);
+    public void handleAddJob(ActionEvent actionEvent) {
+
+        Job job = new Job("job#" + (jobs.size() + 1), "ACTIVE", LocalDateTime.now().plusSeconds(3610).toString());
+        job.setTickets(FXCollections.observableArrayList(new Ticket()));
+        jobs.add(job);
+
+    }
+
+    public void handleUpdateJob(ActionEvent actionEvent) {
+        Job job = jobsTable.getSelectionModel().getSelectedItem();
+
+        if (job != null) {
+            jobHandler.updateJob(job);
+        }
     }
 }

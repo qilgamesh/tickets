@@ -7,6 +7,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import utils.LogUtils;
 
+import java.time.ZoneOffset;
 import java.util.logging.Logger;
 
 /**
@@ -28,29 +29,21 @@ public class Main extends Application {
             updater.start();
         }
 
-        JobHandler jobHandler = JobHandler.getInstance();
-
-        logger.info(jobHandler.getJobs().toString());
-
         FXMLLoader mainLoader = new FXMLLoader();
         mainLoader.setLocation(getClass().getResource("view/Main.fxml"));
         BorderPane mainPane = mainLoader.load();
         MainController mainController = mainLoader.getController();
         mainController.setVersion(updater.getVersion());
         mainController.setPrimaryStage(primaryStage);
-        mainController.setJobs(jobHandler.getJobs());
-
 
         primaryStage.setScene(new Scene(mainPane));
         primaryStage.setTitle("Tickets");
         primaryStage.setOnCloseRequest(windowEvent -> {
             logger.info("Close application");
-            Scheduler.stop();
+            JobHandler.getInstance().stopScheduler();
         });
+
         primaryStage.show();
-
-
-        Scheduler.jobs(jobHandler.getJobs());
     }
 
     public static void main(String[] args) {

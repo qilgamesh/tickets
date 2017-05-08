@@ -1,6 +1,5 @@
 package model;
 
-import java.util.ArrayList;
 
 /**
  * Модель самолёта
@@ -9,11 +8,21 @@ import java.util.ArrayList;
  */
 public class Airplane {
 
+    private int id;
+
     private String name;
     private int rows;
     private int placesInRow;
     private int placesNearWindow;
     private Integer[] longLegsRows;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getName() {
         return name;
@@ -53,5 +62,9 @@ public class Airplane {
 
     public void setLongLegsRows(Integer[] longLegsRows) {
         this.longLegsRows = longLegsRows;
+    }
+
+    public void save() {
+
     }
 }

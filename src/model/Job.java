@@ -1,9 +1,14 @@
 package model;
 
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import handlers.DbHandler;
+import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.ObservableList;
+
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+
 
 /**
  * Модель задания
@@ -13,21 +18,24 @@ import javafx.beans.property.StringProperty;
 public class Job {
 
     private int id;
-
     private transient final StringProperty name;
+
     private transient final StringProperty state;
     private transient final StringProperty departureDate;
     private transient final StringProperty airplane;
-    private transient final IntegerProperty tickets;
+    private SimpleListProperty<Ticket> tickets = new SimpleListProperty<>(this, "tickets");
 
-    public Job(int id, String name, String state, String executeDate) {
-        this.id = id;
+    public Job(String name, String state, String departureDate) {
         this.name = new SimpleStringProperty(name);
         this.state = new SimpleStringProperty(state);
-        System.out.println(executeDate);
-        this.departureDate = new SimpleStringProperty(executeDate);
+
+        this.departureDate = new SimpleStringProperty(departureDate);
         this.airplane = new SimpleStringProperty(null);
-        this.tickets = new SimpleIntegerProperty(1);
+    }
+
+    public Job(int id, String name, String state, String departureDate) {
+        this(name, state, departureDate);
+        this.id = id;
     }
 
     public int getId() {
@@ -66,11 +74,15 @@ public class Job {
         return departureDate.get();
     }
 
+    public long getDepartureDateTimestamp() {
+        return LocalDateTime.parse(getDepartureDate()).toInstant(ZoneOffset.ofHours(5)).getEpochSecond();
+    }
+
     public StringProperty departureDateProperty() {
         return departureDate;
     }
 
-    public void setExecuteDate(String executeDate) {
+    public void setDepartureDate(String executeDate) {
         this.departureDate.set(executeDate);
     }
 
@@ -86,15 +98,27 @@ public class Job {
         this.airplane.set(airplane);
     }
 
-    public int getTickets() {
+    public ObservableList<Ticket> getTickets() {
         return tickets.get();
     }
 
-    public IntegerProperty ticketsProperty() {
+    public SimpleListProperty<Ticket> ticketsProperty() {
         return tickets;
     }
 
-    public void setTickets(int tickets) {
+    public StringProperty ticketsCount() {
+        return new SimpleStringProperty(String.valueOf(tickets.size()));
+    }
+
+    public void setTickets(ObservableList<Ticket> tickets) {
         this.tickets.set(tickets);
+    }
+
+    public synchronized void save() {
+        DbHandler.getInstance().saveJob(this);
+    }
+
+    public static Job get(int id) {
+        return DbHandler.getInstance().getJob(id);
     }
 }

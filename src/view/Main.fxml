@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MainController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MainController">
    <top>
       <MenuBar accessibleRole="MENU_ITEM" nodeOrientation="RIGHT_TO_LEFT" BorderPane.alignment="CENTER">
         <menus>
@@ -26,7 +26,8 @@
          <children>
             <ToolBar prefHeight="40.0" prefWidth="200.0">
               <items>
-                <Button mnemonicParsing="false" text="Button" />
+                <Button onAction="#handleAddJob" mnemonicParsing="false" text="Добавить" />
+                <Button onAction="#handleUpdateJob" mnemonicParsing="false" text="Изменить" />
               </items>
             </ToolBar>
              <TableView fx:id="jobsTable" prefHeight="476.0" prefWidth="600.0" BorderPane.alignment="CENTER">
