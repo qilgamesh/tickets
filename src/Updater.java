@@ -1,14 +1,11 @@
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import utils.LogUtils;
-import controllers.UpdateController;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
-import javafx.scene.layout.GridPane;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 
 import java.io.*;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.Optional;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
@@ -114,29 +111,14 @@ public class Updater {
             return false;
         }
 
-        try {
-            FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(getClass().getResource("view/UpdateDialog.fxml"));
-            GridPane page = loader.load();
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Необходимо обновить приложение");
+        alert.setHeaderText("Установлена версия: " + version + "\nНовая версия: " + lastVersion);
+        alert.setContentText("Обновить сейчас?");
 
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle("Обновление");
-            dialogStage.initModality(Modality.APPLICATION_MODAL);
-//            dialogStage.initOwner(primaryStage);
-            dialogStage.setResizable(false);
-            dialogStage.setScene(new Scene(page));
+        Optional<ButtonType> result = alert.showAndWait();
 
-            UpdateController controller = loader.getController();
-            controller.setVersion(lastVersion);
-            controller.setDialogStage(dialogStage);
-            dialogStage.showAndWait();
-
-            return controller.isOkClicked();
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, "Failed to load update dialog view: ", ex);
-        }
-
-        return false;
+        return result.get() == ButtonType.OK;
     }
 
     /**

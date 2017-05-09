@@ -64,7 +64,7 @@ public class MainController {
         departureCol.setCellValueFactory(cellData -> cellData.getValue().departureDateProperty());
         stateCol.setCellValueFactory(cellData -> cellData.getValue().stateProperty());
 
-        jobsTable.getSelectionModel().selectedItemProperty().addListener((observableValue, job, t1) -> updateButton.setDisable(job == null));
+        jobsTable.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> updateButton.setDisable(newValue == null));
         jobsTable.setItems(this.jobs);
     }
 
@@ -74,8 +74,8 @@ public class MainController {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.initOwner(primaryStage);
         alert.setTitle("О программе");
-        alert.setHeaderText("Tickets");
-        alert.setContentText("Версия: " + version);
+        alert.setHeaderText(null);
+        alert.setContentText("Tickets\nВерсия: " + version);
         alert.showAndWait();
     }
 
