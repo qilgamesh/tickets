@@ -11,16 +11,19 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.time.*;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * Обработчик заданий
- *
+ * <p>
  * Created by Andrey Semenyuk on 2017.
  */
 public class JobHandler {
@@ -29,9 +32,8 @@ public class JobHandler {
     private final static String timeUrl = "https://time100.ru/api.php";
 
     private static JobHandler instance = null;
-    private static DbHandler dbHandler;
     // список заданий
-    private static ObservableList<Job> jobs;
+    private static ObservableList<Job> jobs = FXCollections.observableArrayList();
     // Планировщик
     private final static ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
     // Список запланированных заданий
@@ -39,6 +41,17 @@ public class JobHandler {
 
     private final static Logger logger = LogUtils.getLogger();
 
+    /**
+     * Получение экземляра обработчика
+     *
+     * @return JobHandler
+     */
+    public static JobHandler getInstance() {
+        if (instance == null) {
+            instance = new JobHandler();
+        }
+        return instance;
+    }
 
     /**
      * Конструктор
@@ -47,26 +60,19 @@ public class JobHandler {
      */
     private JobHandler() {
 
-        dbHandler = DbHandler.getInstance();
-        logger.info("Loading active jobs from database");
-        jobs = FXCollections.observableArrayList(dbHandler.getActiveJobs());
-        jobs.forEach(this::scheduleJob);
-
         // слушать на изменение списка заданий
         jobs.addListener((ListChangeListener<? super Job>) change -> {
             while (change.next()) {
                 if (change.wasAdded()) {
-                    for (Job job : change.getAddedSubList()) {
+                    change.getAddedSubList().forEach(job -> {
                         scheduleJob(job);
                         logger.info("Added job name: " + job.getName());
-                    }
-                }
-
-                if (change.wasUpdated()) {
-                    logger.info("jobs updated");
+                    });
                 }
             }
         });
+
+        jobs.addAll(DbHandler.getInstance().getActiveJobs());
     }
 
     /**
@@ -85,7 +91,7 @@ public class JobHandler {
             job.setState("RUNNING");
 
             try {
-                Thread.sleep(job.getTickets().size()*1000);
+                Thread.sleep(job.getTickets().size() * 1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -148,19 +154,7 @@ public class JobHandler {
      * @return ObservableList<Job>
      */
     public ObservableList<Job> getJobs() {
-        logger.info("Get jobs called. Return " + jobs.size() + " elements");
         return jobs;
-    }
-
-    /**
-     * Получение экземляра обработчика
-     * @return JobHandler
-     */
-    public static JobHandler getInstance() {
-        if (instance == null) {
-            instance = new JobHandler();
-        }
-        return instance;
     }
 
     public void stopScheduler() {

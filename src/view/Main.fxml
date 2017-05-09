@@ -8,7 +8,9 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MainController">
    <top>
@@ -22,15 +24,22 @@
       </MenuBar>
    </top>
    <center>
-      <VBox BorderPane.alignment="CENTER">
+      <GridPane BorderPane.alignment="CENTER">
+         <columnConstraints>
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints maxHeight="40.0" minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="1.7976931348623157E308" minHeight="100.0" prefHeight="313.0" vgrow="SOMETIMES" />
+         </rowConstraints>
          <children>
             <ToolBar prefHeight="40.0" prefWidth="200.0">
               <items>
-                <Button onAction="#handleAddJob" mnemonicParsing="false" text="Добавить" />
-                <Button onAction="#handleUpdateJob" mnemonicParsing="false" text="Изменить" />
+                <Button mnemonicParsing="false" onAction="#handleAddJob" text="Добавить" />
+                <Button fx:id="updateButton" disable="true" mnemonicParsing="false" onAction="#handleUpdateJob" text="Изменить" />
               </items>
             </ToolBar>
-             <TableView fx:id="jobsTable" prefHeight="476.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+             <TableView fx:id="jobsTable" GridPane.rowIndex="1">
                  <columns>
                      <TableColumn fx:id="nameCol" prefWidth="75.0" text="Наименование" />
                      <TableColumn fx:id="airplaneCol" prefWidth="75.0" text="Самолёт" />
@@ -43,6 +52,6 @@
                  </columnResizePolicy>
              </TableView>
          </children>
-      </VBox>
+      </GridPane>
    </center>
 </BorderPane>

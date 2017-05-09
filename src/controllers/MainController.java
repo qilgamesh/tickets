@@ -5,14 +5,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.stage.Stage;
 import model.Job;
 import model.Ticket;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 
 /**
@@ -24,6 +23,8 @@ public class MainController {
     private String version;
 
     @FXML
+    private Button updateButton;
+    @FXML
     private TableView<Job> jobsTable;
     @FXML
     private TableColumn<Job, String> nameCol;
@@ -32,26 +33,39 @@ public class MainController {
     @FXML
     private TableColumn<Job, String> ticketsCol;
     @FXML
-    private TableColumn<Job, String> departureCol;
+    private TableColumn<Job, LocalDateTime> departureCol;
     @FXML
     private TableColumn<Job, String> stateCol;
 
     private ObservableList<Job> jobs;
-    private JobHandler jobHandler;
+    private JobHandler jobHandler = JobHandler.getInstance();
 
     @FXML
     private void initialize() {
 
-        jobHandler = JobHandler.getInstance();
-
         jobs = jobHandler.getJobs();
-        jobsTable.setItems(this.jobs);
 
         nameCol.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
         airplaneCol.setCellValueFactory(cellData -> cellData.getValue().airplaneProperty());
         ticketsCol.setCellValueFactory(cellData -> cellData.getValue().ticketsCount());
+
+        DateTimeFormatter myDateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+        departureCol.setCellFactory(column -> new TableCell<Job, LocalDateTime>() {
+            @Override
+            protected void updateItem(LocalDateTime item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    setText(myDateFormatter.format(item));
+                }
+            }
+        });
+
         departureCol.setCellValueFactory(cellData -> cellData.getValue().departureDateProperty());
         stateCol.setCellValueFactory(cellData -> cellData.getValue().stateProperty());
+
+        jobsTable.getSelectionModel().selectedItemProperty().addListener((observableValue, job, t1) -> updateButton.setDisable(job == null));
+        jobsTable.setItems(this.jobs);
     }
 
     @FXML
@@ -75,7 +89,7 @@ public class MainController {
 
     public void handleAddJob(ActionEvent actionEvent) {
 
-        Job job = new Job("job#" + (jobs.size() + 1), "ACTIVE", LocalDateTime.now().plusSeconds(3610).toString());
+        Job job = new Job("job#" + (jobs.size() + 1), "ACTIVE", LocalDateTime.now().plusSeconds(3610));
         job.setTickets(FXCollections.observableArrayList(new Ticket()));
         jobs.add(job);
 
@@ -85,6 +99,7 @@ public class MainController {
         Job job = jobsTable.getSelectionModel().getSelectedItem();
 
         if (job != null) {
+            job.setState("NEW");
             jobHandler.updateJob(job);
         }
     }

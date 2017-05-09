@@ -1,12 +1,12 @@
 package model;
 
 import handlers.DbHandler;
-import javafx.beans.property.SimpleListProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 
 
@@ -21,20 +21,20 @@ public class Job {
     private transient final StringProperty name;
 
     private transient final StringProperty state;
-    private transient final StringProperty departureDate;
+    private transient final ObjectProperty<LocalDateTime> departureDate;
     private transient final StringProperty airplane;
     private SimpleListProperty<Ticket> tickets = new SimpleListProperty<>(this, "tickets");
 
-    public Job(String name, String state, String departureDate) {
+    public Job(String name, String state, LocalDateTime departureDate) {
         this.name = new SimpleStringProperty(name);
         this.state = new SimpleStringProperty(state);
 
-        this.departureDate = new SimpleStringProperty(departureDate);
+        this.departureDate = new SimpleObjectProperty<>(departureDate);
         this.airplane = new SimpleStringProperty(null);
     }
 
-    public Job(int id, String name, String state, String departureDate) {
-        this(name, state, departureDate);
+    public Job(int id, String name, String state, String departureDateTimestamp) {
+        this(name, state, LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.valueOf(departureDateTimestamp)), ZoneId.of("GMT+5")));
         this.id = id;
     }
 
@@ -70,19 +70,23 @@ public class Job {
         this.state.set(state);
     }
 
-    public String getDepartureDate() {
+    public LocalDateTime getDepartureDate() {
         return departureDate.get();
     }
 
     public long getDepartureDateTimestamp() {
-        return LocalDateTime.parse(getDepartureDate()).toInstant(ZoneOffset.ofHours(5)).getEpochSecond();
+        return getDepartureDate().toInstant(ZoneOffset.ofHours(5)).getEpochSecond();
     }
 
-    public StringProperty departureDateProperty() {
+    public ObjectProperty<LocalDateTime> departureDateProperty() {
         return departureDate;
     }
 
     public void setDepartureDate(String executeDate) {
+        this.departureDate.set(LocalDateTime.parse(executeDate));
+    }
+
+    public void setDepartureDate(LocalDateTime executeDate) {
         this.departureDate.set(executeDate);
     }
 
