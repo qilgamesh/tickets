@@ -1,6 +1,10 @@
 package model;
 
 
+import handlers.DbHandler;
+
+import java.util.List;
+
 /**
  * Модель самолёта
  *
@@ -15,6 +19,11 @@ public class Airplane {
     private int placesInRow;
     private int placesNearWindow;
     private Integer[] longLegsRows;
+
+    public Airplane(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
 
     public int getId() {
         return id;
@@ -66,5 +75,14 @@ public class Airplane {
 
     public void save() {
 
+    }
+
+    public static List<Airplane> list() {
+        return DbHandler.getInstance().getAirplanes();
+    }
+
+    @Override
+    public String toString() {
+        return getName();
     }
 }

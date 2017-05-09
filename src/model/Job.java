@@ -25,16 +25,22 @@ public class Job {
     private transient final StringProperty airplane;
     private SimpleListProperty<Ticket> tickets = new SimpleListProperty<>(this, "tickets");
 
-    public Job(String name, String state, LocalDateTime departureDate) {
-        this.name = new SimpleStringProperty(name);
-        this.state = new SimpleStringProperty(state);
-
-        this.departureDate = new SimpleObjectProperty<>(departureDate);
+    public Job() {
+        this.name = new SimpleStringProperty("Job# " + DbHandler.getInstance().getJobsCount() + 1);
+        this.state = new SimpleStringProperty(null);
+        this.departureDate = new SimpleObjectProperty<>(null);
         this.airplane = new SimpleStringProperty(null);
     }
 
-    public Job(int id, String name, String state, String departureDateTimestamp) {
-        this(name, state, LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.valueOf(departureDateTimestamp)), ZoneId.of("GMT+5")));
+    public Job(String name, String state, LocalDateTime departureDate, String airplane) {
+        this.name = new SimpleStringProperty(name);
+        this.state = new SimpleStringProperty(state);
+        this.departureDate = new SimpleObjectProperty<>(departureDate);
+        this.airplane = new SimpleStringProperty(airplane);
+    }
+
+    public Job(int id, String name, String state, String departureDateTimestamp, String airplane) {
+        this(name, state, LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.valueOf(departureDateTimestamp)), ZoneId.of("GMT+5")), airplane);
         this.id = id;
     }
 

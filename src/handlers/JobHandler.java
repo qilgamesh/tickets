@@ -65,6 +65,7 @@ public class JobHandler {
             while (change.next()) {
                 if (change.wasAdded()) {
                     change.getAddedSubList().forEach(job -> {
+                        job.save();
                         scheduleJob(job);
                         logger.info("Added job name: " + job.getName());
                     });
@@ -80,13 +81,17 @@ public class JobHandler {
      *
      * @param job задание для добавления
      */
-    private void scheduleJob(Job job) {
+    public void scheduleJob(Job job) {
 
         if (job.getState().equals(JobState.COMPLETED.toString())) {
             return;
         }
 
         final Runnable jobRun = () -> {
+            if (job.getState().equals("EDITABLE")) {
+                return;
+            }
+
             logger.info("Running job: " + job.getName());
             job.setState("RUNNING");
 
@@ -112,9 +117,13 @@ public class JobHandler {
      *
      * @param job отменённое задание
      */
-    private void removeJob(Job job) {
+    public void removeJob(Job job) {
+
         ScheduledFuture<?> future = runningJobs.get(job);
-        future.cancel(true);
+
+        if (future != null) {
+            future.cancel(true);
+        }
     }
 
 
@@ -125,7 +134,8 @@ public class JobHandler {
      */
     public void updateJob(Job job) {
         removeJob(job);
-        job.setDepartureDate(LocalDateTime.now().plusSeconds(3610).toString());
+        job.save();
+        job.setState("NEW");
         scheduleJob(job);
     }
 

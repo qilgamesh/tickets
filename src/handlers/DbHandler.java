@@ -2,6 +2,7 @@ package handlers;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import model.Airplane;
 import model.Job;
 import model.Ticket;
 import org.sqlite.JDBC;
@@ -78,6 +79,7 @@ public class DbHandler {
                     "CREATE TABLE IF NOT EXISTS 'job' (" +
                             "'id' INTEGER PRIMARY KEY AUTOINCREMENT," +
                             "'name' TEXT," +
+                            "'airplane' TEXT," +
                             "'state' TEXT," +
                             "'departure_date' TIMESTAMP);"
             );
@@ -120,7 +122,7 @@ public class DbHandler {
             Random random = new Random();
 
             while (rs.next()) {
-                Job job = new Job(rs.getInt("id"), rs.getString("name"), rs.getString("state"), rs.getString("departure_date"));
+                Job job = new Job(rs.getInt("id"), rs.getString("name"), rs.getString("state"), rs.getString("departure_date"), rs.getString("airplane"));
                 job.setTickets(getTicketByJobId(job.getId()));
                 // TODO для теста !! удалить после теста
                 int rnd = random.nextInt(30);
@@ -134,6 +136,23 @@ public class DbHandler {
         }
 
         return jobs;
+    }
+
+    public int getJobsCount() {
+
+        int count = 0;
+
+        try (Statement statement = this.connection.createStatement()) {
+            ResultSet rs = statement.executeQuery("SELECT COUNT(*) FROM job;");
+
+            while (rs.next()) {
+                count = rs.getInt(1);
+            }
+        } catch (SQLException ex) {
+            logger.log(Level.SEVERE, "Failed to get jobs: ", ex);
+        }
+
+        return count;
     }
 
     /**
@@ -170,7 +189,7 @@ public class DbHandler {
             ResultSet rs = statement.executeQuery("SELECT * FROM job WHERE id = " + id);
             rs.next();
             logger.info("Result select job: " + rs.getRow());
-            return new Job(id, rs.getString(2), rs.getString(3), rs.getString(4));
+            return new Job(id, rs.getString("name"), rs.getString("state"), rs.getString("departure_date"), rs.getString("airplane"));
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Failed to create statement", ex);
         }
@@ -186,10 +205,10 @@ public class DbHandler {
     public synchronized void saveJob(Job job) {
 
         Job savedJob = getJob(job.getId());
-        String smnt = "UPDATE job SET (name, state, departure_date) = (?, ?, ?) WHERE id = " + job.getId() + ";";
+        String smnt = "UPDATE job SET (name, airplane, state, departure_date) = (?, ?, ?, ?) WHERE id = " + job.getId() + ";";
 
         if (savedJob == null) {
-            smnt = "INSERT INTO job (name, state, departure_date) VALUES (?, ?, ?);";
+            smnt = "INSERT INTO job (name, airplane, state, departure_date) VALUES (?, ?, ?, ?);";
             logger.info("Save new job with name: " + job.getName());
         } else {
             logger.info("Update saved job with name: " + savedJob.getName());
@@ -198,8 +217,9 @@ public class DbHandler {
         try {
             PreparedStatement statement = this.connection.prepareStatement(smnt);
             statement.setString(1, job.getName());
-            statement.setString(2, job.getState());
-            statement.setString(3, String.valueOf(job.getDepartureDateTimestamp()));
+            statement.setString(2, job.getAirplane());
+            statement.setString(3, job.getState());
+            statement.setString(4, String.valueOf(job.getDepartureDateTimestamp()));
 
             if (statement.executeUpdate() == 0) {
                 logger.warning("Save job error");
@@ -262,7 +282,7 @@ public class DbHandler {
             PreparedStatement statement = this.connection.prepareStatement(smnt);
             statement.setString(1, ticket.getLastName());
             statement.setString(2, ticket.getNumber());
-            statement.setString(3, ticket.getDate());
+            statement.setString(3, ticket.getDate().toString());
             statement.setString(4, ticket.getFlightNumber());
             statement.setInt(5, ticket.getJobId());
 
@@ -280,5 +300,21 @@ public class DbHandler {
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Failed to create statement", ex);
         }
+    }
+
+    public List<Airplane> getAirplanes() {
+        List<Airplane> airplanes = new ArrayList<>();
+
+        try (Statement statement = this.connection.createStatement()) {
+            ResultSet rs = statement.executeQuery("SELECT * FROM airplane;");
+
+            while (rs.next()) {
+                airplanes.add(new Airplane(rs.getInt(1), rs.getString("name")));
+            }
+        } catch (SQLException ex) {
+            logger.log(Level.SEVERE, "Failed to get airplanes: ", ex);
+        }
+
+        return airplanes;
     }
 }

@@ -1,15 +1,18 @@
 package controllers;
 
 import handlers.JobHandler;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.Job;
-import model.Ticket;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -87,20 +90,50 @@ public class MainController {
         this.version = version;
     }
 
+    private void showJobEditDialog(Job job) {
+
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(getClass().getResource("/view/JobEdit.fxml"));
+            GridPane page = loader.load();
+
+            // Create the dialog Stage.
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Редактирование транзакции");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(primaryStage);
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+
+            JobEditDialogController jobEditDialogController = loader.getController();
+            jobEditDialogController.setDialogStage(dialogStage);
+            jobEditDialogController.setJob(job);
+            dialogStage.showAndWait();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void handleAddJob(ActionEvent actionEvent) {
 
-        Job job = new Job("job#" + (jobs.size() + 1), "ACTIVE", LocalDateTime.now().plusSeconds(3610));
-        job.setTickets(FXCollections.observableArrayList(new Ticket()));
-        jobs.add(job);
+        Job newJob = new Job();
+        showJobEditDialog(newJob);
 
+        if (newJob.getState().equals("NEW")) {
+            jobs.add(newJob);
+        }
     }
 
     public void handleUpdateJob(ActionEvent actionEvent) {
+
         Job job = jobsTable.getSelectionModel().getSelectedItem();
 
         if (job != null) {
-            job.setState("NEW");
-            jobHandler.updateJob(job);
+            showJobEditDialog(job);
+
+            if (job.getState().equals("NEW")) {
+                jobHandler.updateJob(job);
+            }
         }
     }
 }
