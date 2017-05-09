@@ -314,7 +314,12 @@ public class DbHandler {
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Failed to get airplanes: ", ex);
         }
-
+        // TODO для теста!
+        if (airplanes.size() == 0) {
+            airplanes.add(new Airplane(1, "Boeng-777"));
+            airplanes.add(new Airplane(2, "Airbus A310"));
+            airplanes.add(new Airplane(3, "Airbus A320"));
+        }
         return airplanes;
     }
 }
