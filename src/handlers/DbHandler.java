@@ -229,6 +229,7 @@ public class DbHandler {
                 int id = statement.getGeneratedKeys().getInt(1);
                 logger.info("New job successful saved (id: " + id + ")");
                 job.getTickets().forEach(ticket -> ticket.setJobId(id));
+                job.setId(id);
             } else {
                 logger.info("Job successful updated (id=" + job.getId() + ")");
             }

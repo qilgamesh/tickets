@@ -26,7 +26,7 @@ public class Job {
     private SimpleListProperty<Ticket> tickets = new SimpleListProperty<>(this, "tickets");
 
     public Job() {
-        this.name = new SimpleStringProperty("Job# " + DbHandler.getInstance().getJobsCount() + 1);
+        this.name = new SimpleStringProperty("Job# " + (DbHandler.getInstance().getJobsCount() + 1));
         this.state = new SimpleStringProperty(null);
         this.departureDate = new SimpleObjectProperty<>(null);
         this.airplane = new SimpleStringProperty(null);
