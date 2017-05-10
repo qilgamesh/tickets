@@ -26,7 +26,7 @@ public class Main extends Application {
 
         // проверяем обновления
         if (updater.checkUpdateNeed()) {
-            updater.start();
+            updater.startUpdate();
         }
 
         FXMLLoader mainLoader = new FXMLLoader();

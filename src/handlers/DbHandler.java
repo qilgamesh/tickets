@@ -9,11 +9,13 @@ import org.sqlite.JDBC;
 import utils.LogUtils;
 
 import java.io.File;
+import java.io.InputStream;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -101,6 +103,32 @@ public class DbHandler {
             );
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Failed to create tables: ", ex);
+        }
+    }
+
+    /**
+     * Запуск миграции базы данных
+     *
+     * @param in входящий поток из файла со скриптом
+     */
+    public void executeMigrate(InputStream in) {
+
+        Scanner scanner = new Scanner(in);
+        scanner.useDelimiter("((\r)?\n)");
+
+        try {
+            Statement statement = this.connection.createStatement();
+
+            while (scanner.hasNext()) {
+                String line = scanner.next();
+
+                if (line.trim().length() > 0) {
+                    statement.execute(line);
+                }
+            }
+
+        } catch (SQLException ex) {
+            logger.log(Level.SEVERE, "Failed to execute migrate tables: ", ex);
         }
     }
 

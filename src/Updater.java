@@ -1,8 +1,10 @@
+import handlers.DbHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import utils.LogUtils;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.Optional;
@@ -26,18 +28,37 @@ public class Updater {
     private static Updater instance;
 
     private Updater() {
+
+        migrate();
         cleanup();
+
         Updater.version = getVersion();
+    }
+
+    /**
+     * Миграция базы данных
+     */
+    private void migrate() {
+
+        try {
+            DbHandler.getInstance().executeMigrate(new FileInputStream("migrate.sql"));
+        } catch (FileNotFoundException e) {
+            logger.severe("File migrate.sql not found");
+        }
     }
 
     /**
      * Удаление updater
      */
     private void cleanup() {
-        File f = new File("updater.jar");
-        if (f.exists()) {
-            if (!f.delete()) {
-                logger.warning("Failed to delete updater: " + f.getAbsolutePath());
+
+        String[] filesToCleanup = {"updater.jar", "migrate.sql"};
+
+        for (String fileName : filesToCleanup) {
+            File file = new File(fileName);
+
+            if (file.exists() && !file.delete()) {
+                logger.warning("Failed to delete file: " + file.getAbsolutePath());
             }
         }
     }
@@ -100,6 +121,9 @@ public class Updater {
             URL url = new URL(BASE_URL + "/version");
             BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
             lastVersion = br.readLine();
+        } catch (ConnectException ex) {
+            logger.log(Level.SEVERE, "Failed to check update: " + ex.getMessage());
+            return false;
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "Failed to check update", ex);
             return false;
@@ -125,7 +149,7 @@ public class Updater {
      * Главный метод обновления: удаляет старые обновления, если остались,
      * скачивает новый архив с обнолениями, извлекает во временную папку и запускает программу обновления
      */
-    void start() {
+    void startUpdate() {
 
         String updateFileLink = BASE_URL + "/update.zip";
 
