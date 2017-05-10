@@ -32,8 +32,6 @@ public class MainController {
     @FXML
     private TableColumn<Job, String> nameCol;
     @FXML
-    private TableColumn<Job, String> airplaneCol;
-    @FXML
     private TableColumn<Job, String> ticketsCol;
     @FXML
     private TableColumn<Job, LocalDateTime> departureCol;
@@ -49,10 +47,9 @@ public class MainController {
         jobs = jobHandler.getJobs();
 
         nameCol.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
-        airplaneCol.setCellValueFactory(cellData -> cellData.getValue().airplaneProperty());
         ticketsCol.setCellValueFactory(cellData -> cellData.getValue().ticketsCount());
 
-        DateTimeFormatter myDateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+        DateTimeFormatter myDateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
         departureCol.setCellFactory(column -> new TableCell<Job, LocalDateTime>() {
             @Override
             protected void updateItem(LocalDateTime item, boolean empty) {

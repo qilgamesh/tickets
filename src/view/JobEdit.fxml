@@ -2,7 +2,6 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
@@ -18,7 +17,7 @@
       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
    </columnConstraints>
    <rowConstraints>
-      <RowConstraints maxHeight="160.0" minHeight="160.0" prefHeight="160.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="160.0" minHeight="120.0" prefHeight="120.0" vgrow="SOMETIMES" />
       <RowConstraints maxHeight="1.7976931348623157E308" minHeight="80.0" vgrow="SOMETIMES" />
       <RowConstraints maxHeight="40.0" minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
    </rowConstraints>
@@ -32,7 +31,6 @@
           <RowConstraints maxHeight="40.0" minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
           <RowConstraints maxHeight="40.0" minHeight="40.0" prefHeight="40.0" valignment="CENTER" vgrow="SOMETIMES" />
             <RowConstraints maxHeight="40.0" minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
-            <RowConstraints maxHeight="40.0" minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
             <Label text="Наименование">
@@ -45,29 +43,23 @@
                   <Insets right="10.0" />
                </padding>
             </Label>
-            <Label text="Самолёт" GridPane.rowIndex="2">
-               <padding>
-                  <Insets right="10.0" />
-               </padding>
-            </Label>
             <TextField fx:id="descriptionField" maxWidth="200.0" prefWidth="200.0" GridPane.columnIndex="1">
                <GridPane.margin>
                   <Insets />
                </GridPane.margin>
             </TextField>
-            <Label text="Билеты" GridPane.rowIndex="3">
+            <Label text="Билеты" GridPane.rowIndex="2">
                <padding>
                   <Insets right="10.0" />
                </padding>
             </Label>
             <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" spacing="20.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                <children>
-                  <DatePicker fx:id="datePicker" maxWidth="200.0" prefWidth="200.0" promptText="ДД.ММ.ГГГГ" />
-                  <TextField fx:id="timeField" alignment="CENTER" maxWidth="70.0" minWidth="50.0" prefHeight="26.0" prefWidth="70.0" promptText="ЧЧ:ММ" />
+                  <DatePicker fx:id="departureDatePicker" maxWidth="200.0" prefWidth="200.0" promptText="ДД.ММ.ГГГГ" />
+                  <TextField fx:id="departureTimeField" alignment="CENTER" maxWidth="70.0" minWidth="50.0" prefHeight="26.0" prefWidth="70.0" promptText="ЧЧ:ММ" />
                </children>
             </HBox>
-            <ChoiceBox fx:id="airplaneChoice" maxWidth="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-            <Button mnemonicParsing="false" onAction="#addTicket" text="Добавить" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            <Button mnemonicParsing="false" onAction="#addTicket" text="Добавить" GridPane.columnIndex="1" GridPane.rowIndex="2" />
          </children>
       </GridPane>
       <TableView fx:id="ticketTable" GridPane.rowIndex="1">

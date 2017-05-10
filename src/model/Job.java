@@ -22,25 +22,22 @@ public class Job {
 
     private transient final StringProperty state;
     private transient final ObjectProperty<LocalDateTime> departureDate;
-    private transient final StringProperty airplane;
     private SimpleListProperty<Ticket> tickets = new SimpleListProperty<>(this, "tickets");
 
     public Job() {
         this.name = new SimpleStringProperty("Job# " + (DbHandler.getInstance().getJobsCount() + 1));
         this.state = new SimpleStringProperty(null);
         this.departureDate = new SimpleObjectProperty<>(null);
-        this.airplane = new SimpleStringProperty(null);
     }
 
-    public Job(String name, String state, LocalDateTime departureDate, String airplane) {
+    public Job(String name, String state, LocalDateTime departureDate) {
         this.name = new SimpleStringProperty(name);
         this.state = new SimpleStringProperty(state);
         this.departureDate = new SimpleObjectProperty<>(departureDate);
-        this.airplane = new SimpleStringProperty(airplane);
     }
 
-    public Job(int id, String name, String state, String departureDateTimestamp, String airplane) {
-        this(name, state, LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.valueOf(departureDateTimestamp)), ZoneId.of("GMT+5")), airplane);
+    public Job(int id, String name, String state, String departureDateTimestamp) {
+        this(name, state, LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.valueOf(departureDateTimestamp)), ZoneId.of("GMT+5")));
         this.id = id;
     }
 
@@ -94,18 +91,6 @@ public class Job {
 
     public void setDepartureDate(LocalDateTime executeDate) {
         this.departureDate.set(executeDate);
-    }
-
-    public String getAirplane() {
-        return airplane.get();
-    }
-
-    public StringProperty airplaneProperty() {
-        return airplane;
-    }
-
-    public void setAirplane(String airplane) {
-        this.airplane.set(airplane);
     }
 
     public ObservableList<Ticket> getTickets() {

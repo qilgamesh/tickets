@@ -42,7 +42,6 @@
              <TableView fx:id="jobsTable" GridPane.rowIndex="1">
                  <columns>
                      <TableColumn fx:id="nameCol" prefWidth="75.0" text="Наименование" />
-                     <TableColumn fx:id="airplaneCol" prefWidth="75.0" text="Самолёт" />
                      <TableColumn fx:id="ticketsCol" prefWidth="75.0" text="Билетов" />
                      <TableColumn fx:id="departureCol" prefWidth="75.0" text="Время вылета" />
                      <TableColumn fx:id="stateCol" prefWidth="75.0" text="Статус" />

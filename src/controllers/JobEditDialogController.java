@@ -8,7 +8,6 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
-import model.Airplane;
 import model.Job;
 import model.Ticket;
 
@@ -29,25 +28,22 @@ public class JobEditDialogController {
     @FXML
     private TextField descriptionField;
     @FXML
-    private DatePicker datePicker;
+    private DatePicker departureDatePicker;
     @FXML
-    private TextField timeField;
-    @FXML
-    private ChoiceBox<Airplane> airplaneChoice;
+    private TextField departureTimeField;
     @FXML
     private TableView<Ticket> ticketTable;
 
     private Stage dialogStage;
     private Job job;
     private ObservableList<Ticket> tickets = FXCollections.observableArrayList();
-    private ObservableList<Airplane> airplanes = FXCollections.observableArrayList(Airplane.list());
+
     private boolean hasErrors = false;
 
     @FXML
     private void initialize() {
 
         ticketTable.setItems(tickets);
-        airplaneChoice.setItems(airplanes);
 
         descriptionField.textProperty().addListener((observableValue, oldValue, newValue) -> {
             if (newValue == null || newValue.length() == 0) {
@@ -97,13 +93,13 @@ public class JobEditDialogController {
             @Override
             public String toString(String commitedText) {
                 if (commitedText == null) {
-                    return timeField.getText();
+                    return departureTimeField.getText();
                 }
 
                 if (commitedText.length() == 4 && commitedText.matches("(0[1-9]|1[0-9]|2[0-3])([0-5][0-9])")) {
                     return String.format("%s:%s", commitedText.substring(0, 2), commitedText.substring(2, 4));
                 }
-                return timeField.getText();
+                return departureTimeField.getText();
             }
 
             @Override
@@ -120,13 +116,9 @@ public class JobEditDialogController {
             }
         };
 
-        timeField.setTextFormatter(new TextFormatter<>(converter, LocalTime.now().format(DateTimeFormatter.ofPattern("HHmm")), filter));
+        departureTimeField.setTextFormatter(new TextFormatter<>(converter, LocalTime.now().format(DateTimeFormatter.ofPattern("HHmm")), filter));
 
-        airplaneChoice.getSelectionModel().selectedIndexProperty().addListener((ov, value, new_value) -> {
-            job.setAirplane(airplanes.get((Integer) new_value).getName());
-        });
-
-        datePicker.setDayCellFactory(new Callback<DatePicker, DateCell>() {
+        departureDatePicker.setDayCellFactory(new Callback<DatePicker, DateCell>() {
             @Override
             public DateCell call(final DatePicker datePicker) {
                 return new DateCell() {
@@ -145,9 +137,9 @@ public class JobEditDialogController {
             }
         });
 
-        datePicker.setOnAction(actionEvent -> {
-            if (datePicker.getValue().isBefore(LocalDate.now())) {
-                datePicker.setValue(LocalDate.now());
+        departureDatePicker.setOnAction(actionEvent -> {
+            if (departureDatePicker.getValue().isBefore(LocalDate.now())) {
+                departureDatePicker.setValue(LocalDate.now());
             }
         });
     }
@@ -168,8 +160,8 @@ public class JobEditDialogController {
             job.setName(descriptionField.getText());
         }
 
-        if (datePicker.getValue() != null && timeField.getText().length() == 5) {
-            job.setDepartureDate(LocalDateTime.of(datePicker.getValue(), LocalTime.parse(timeField.getText())));
+        if (departureDatePicker.getValue() != null && departureTimeField.getText().length() == 5) {
+            job.setDepartureDate(LocalDateTime.of(departureDatePicker.getValue(), LocalTime.parse(departureTimeField.getText())));
         }
 
         if (tickets.size() > 0) {
@@ -178,7 +170,7 @@ public class JobEditDialogController {
     }
 
     private boolean validateJob() {
-        return job.getAirplane() != null && job.getName() != null && job.getDepartureDate() != null;
+        return job.getName() != null && job.getDepartureDate() != null;
     }
 
     public void handleCancel() {
@@ -191,11 +183,10 @@ public class JobEditDialogController {
         this.job = job;
         descriptionField.setText(job.getName());
 
-        airplanes.forEach(airplane -> {
-            if (airplane.getName().equals(job.getAirplane())) {
-                airplaneChoice.setValue(airplane);
-            }
-        });
+        if (job.getDepartureDate() != null) {
+            departureDatePicker.setValue(job.getDepartureDate().toLocalDate());
+            departureTimeField.setText(job.getDepartureDate().toLocalTime().format(DateTimeFormatter.ofPattern("HHmm")));
+        }
 
         if (job.getTickets() != null) {
             tickets = job.getTickets();
