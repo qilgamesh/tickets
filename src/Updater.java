@@ -40,10 +40,22 @@ public class Updater {
      */
     private void migrate() {
 
+        File migrateFile = new File("migrate.sql");
+        FileInputStream inputStream = null;
+
         try {
-            DbHandler.getInstance().executeMigrate(new FileInputStream("migrate.sql"));
+            inputStream = new FileInputStream(migrateFile);
+            DbHandler.getInstance().executeMigrate(inputStream);
         } catch (FileNotFoundException e) {
-            logger.severe("File migrate.sql not found");
+            logger.severe("File migrate.sql not found. Skipping migrate.");
+        } finally {
+            try {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, "Failed to close input stream", ex);
+            }
         }
     }
 
