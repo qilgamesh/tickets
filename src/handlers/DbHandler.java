@@ -115,6 +115,8 @@ public class DbHandler {
      */
     public void executeMigrate(InputStream in) {
 
+        logger.info("Start migrate");
+
         Scanner scanner = new Scanner(in);
         scanner.useDelimiter("((\r)?\n)");
 
@@ -125,6 +127,7 @@ public class DbHandler {
                 String line = scanner.next();
 
                 if (line.trim().length() > 0) {
+                    logger.info("Migrate: execute line: " + line);
                     statement.execute(line);
                 }
             }
