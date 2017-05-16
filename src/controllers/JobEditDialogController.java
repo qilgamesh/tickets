@@ -5,10 +5,13 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import model.Job;
+import model.JobState;
 import model.Ticket;
 
 import java.time.LocalDate;
@@ -32,13 +35,16 @@ public class JobEditDialogController {
     @FXML
     private TextField departureTimeField;
     @FXML
+    private TextField priorToRegField;
+    @FXML
     private TableView<Ticket> ticketTable;
 
     private Stage dialogStage;
     private Job job;
     private ObservableList<Ticket> tickets = FXCollections.observableArrayList();
 
-    private boolean hasErrors = false;
+    private static int MIN_PRIOR_TO_REG = 12;
+    private static int MAX_PRIOR_TO_REG = 48;
 
     @FXML
     private void initialize() {
@@ -53,14 +59,14 @@ public class JobEditDialogController {
             }
         });
 
-        UnaryOperator<TextFormatter.Change> filter = change -> {
+        UnaryOperator<TextFormatter.Change> filterTimeField = change -> {
             if (!change.isContentChange()) {
                 return change;
             }
 
             switch (change.getControlText().length()) {
                 case 0:
-                    if (!change.getControlNewText().matches("[0-2]")) {
+                    if (!change.getControlNewText().matches("[0-2]") && change.getControlNewText().length() != 4) {
                         return null;
                     }
                     break;
@@ -89,7 +95,7 @@ public class JobEditDialogController {
             return change;
         };
 
-        StringConverter<String> converter = new StringConverter<String>() {
+        StringConverter<String> converterTimeField = new StringConverter<String>() {
             @Override
             public String toString(String commitedText) {
                 if (commitedText == null) {
@@ -116,7 +122,7 @@ public class JobEditDialogController {
             }
         };
 
-        departureTimeField.setTextFormatter(new TextFormatter<>(converter, LocalTime.now().format(DateTimeFormatter.ofPattern("HHmm")), filter));
+        departureTimeField.setTextFormatter(new TextFormatter<>(converterTimeField, LocalTime.now().format(DateTimeFormatter.ofPattern("HHmm")), filterTimeField));
 
         departureDatePicker.setDayCellFactory(new Callback<DatePicker, DateCell>() {
             @Override
@@ -142,6 +148,45 @@ public class JobEditDialogController {
                 departureDatePicker.setValue(LocalDate.now());
             }
         });
+
+        priorToRegField.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
+            if (keyEvent.getCode() == KeyCode.DOWN) {
+                handleDecrement();
+                keyEvent.consume();
+            }
+
+            if (keyEvent.getCode() == KeyCode.UP) {
+                handleIncrement();
+                keyEvent.consume();
+            }
+        });
+
+        priorToRegField.textProperty().addListener((observable, oldValue, newValue) -> {
+
+            if (newValue.length() == 0 || !newValue.matches("\\d+")) {
+                priorToRegField.setText("24");
+                return;
+            }
+
+            if (oldValue.length() == 1 && Integer.valueOf(newValue) <= MIN_PRIOR_TO_REG) {
+                priorToRegField.setText(String.valueOf(MIN_PRIOR_TO_REG));
+                return;
+            }
+
+            if (Integer.valueOf(newValue) >= MAX_PRIOR_TO_REG) {
+                priorToRegField.setText(String.valueOf(MAX_PRIOR_TO_REG));
+            }
+        });
+
+
+        priorToRegField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+
+            if (!newValue) {
+                if (Integer.valueOf(priorToRegField.getText()) <= MIN_PRIOR_TO_REG) {
+                    priorToRegField.setText(String.valueOf(MIN_PRIOR_TO_REG));
+                }
+            }
+        });
     }
 
     public void handleSave() {
@@ -149,7 +194,7 @@ public class JobEditDialogController {
         populateJobFields();
 
         if (validateJob()) {
-            job.setState("NEW");
+            job.setState(JobState.NEW.toString());
             dialogStage.close();
         }
     }
@@ -167,6 +212,8 @@ public class JobEditDialogController {
         if (tickets.size() > 0) {
             job.setTickets(tickets);
         }
+
+        job.setPriorToReg(Integer.valueOf(priorToRegField.getText()));
     }
 
     private boolean validateJob() {
@@ -179,7 +226,7 @@ public class JobEditDialogController {
 
     void setJob(Job job) {
 
-        job.setState("EDITABLE");
+        job.setState(JobState.EDITABLE.toString());
         this.job = job;
         descriptionField.setText(job.getName());
 
@@ -191,18 +238,42 @@ public class JobEditDialogController {
         if (job.getTickets() != null) {
             tickets = job.getTickets();
         }
+
+        if (job.getPriorToReg() != 24) {
+            priorToRegField.setText(String.valueOf(job.getPriorToReg()));
+        }
     }
 
     void setDialogStage(Stage dialogStage) {
         this.dialogStage = dialogStage;
     }
 
-    public void addTicket(ActionEvent actionEvent) {
+    public void addTicket() {
 
         tickets.add(new Ticket("FAM", "1234567890", LocalDate.now().toString(), "SR301", 0));
     }
 
-    Job getJob() {
-        return job;
+    public void handleIncrement() {
+
+        Integer value = Integer.valueOf(priorToRegField.getText());
+
+        if (value >= MAX_PRIOR_TO_REG) {
+            priorToRegField.setText(String.valueOf(MAX_PRIOR_TO_REG));
+            return;
+        }
+
+        priorToRegField.setText((++value).toString());
+    }
+
+    public void handleDecrement() {
+
+        Integer value = Integer.valueOf(priorToRegField.getText());
+
+        if (value <= MIN_PRIOR_TO_REG) {
+            priorToRegField.setText(String.valueOf(MIN_PRIOR_TO_REG));
+            return;
+        }
+
+        priorToRegField.setText((--value).toString());
     }
 }

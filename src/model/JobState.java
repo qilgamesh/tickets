@@ -7,9 +7,11 @@ package model;
  */
 public enum JobState {
     ACTIVE("Активно"),
+    EDITABLE("Редактируемое"),
     EMPTY(""),
     COMPLETED("Завершено"),
     NEW("Новое"),
+    CHECKIN("Регистрация"),
     ERROR("Ошибка");
 
     private String description;

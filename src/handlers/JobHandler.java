@@ -11,9 +11,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -81,35 +81,37 @@ public class JobHandler {
      *
      * @param job задание для добавления
      */
-    public void scheduleJob(Job job) {
+    private void scheduleJob(Job job) {
 
         if (job.getState().equals(JobState.COMPLETED.toString())) {
             return;
         }
 
+        Random random = new Random();
+
         final Runnable jobRun = () -> {
-            if (job.getState().equals("EDITABLE")) {
+            if (job.getState().equals(JobState.EDITABLE.toString())) {
                 return;
             }
 
             logger.info("Running job: " + job.getName());
-            job.setState("RUNNING");
+            job.setState(JobState.CHECKIN.getDescription());
 
             try {
-                Thread.sleep(job.getTickets().size() * 1000);
+                Thread.sleep(job.getTickets().size() * 100 * random.nextInt(100));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
-            job.setState("COMPLETED");
+            job.setState(JobState.COMPLETED.toString());
             job.save();
         };
 
-        long delay = job.getDepartureDateTimestamp() - getCurrentSecond() - 3600;
+        long delay = job.getDepartureDateTimestamp() - getCurrentSecond() - job.getPriorToReg()*3600;
         logger.info("delay: " + delay + " сек");
 
         runningJobs.put(job, scheduler.schedule(jobRun, delay, TimeUnit.SECONDS));
-        job.setState("ACTIVE");
+        job.setState(JobState.ACTIVE.toString());
     }
 
     /**
@@ -117,7 +119,7 @@ public class JobHandler {
      *
      * @param job отменённое задание
      */
-    public void removeJob(Job job) {
+    private void removeJob(Job job) {
 
         ScheduledFuture<?> future = runningJobs.get(job);
 
@@ -135,7 +137,7 @@ public class JobHandler {
     public void updateJob(Job job) {
         removeJob(job);
         job.save();
-        job.setState("NEW");
+        job.setState(JobState.NEW.toString());
         scheduleJob(job);
     }
 

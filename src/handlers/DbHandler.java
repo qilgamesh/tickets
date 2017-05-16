@@ -4,6 +4,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import model.Airplane;
 import model.Job;
+import model.JobState;
 import model.Ticket;
 import org.sqlite.JDBC;
 import utils.LogUtils;
@@ -82,7 +83,8 @@ public class DbHandler {
                             "'id' INTEGER PRIMARY KEY AUTOINCREMENT," +
                             "'name' TEXT," +
                             "'state' TEXT," +
-                            "'departure_date' TIMESTAMP);"
+                            "'departure_date' TIMESTAMP," +
+                            "'prior_to_reg' INTEGER DEFAULT 24);"
             );
             statement.execute(
                     "CREATE TABLE IF NOT EXISTS 'airplane' (" +
@@ -143,19 +145,13 @@ public class DbHandler {
 
         try (Statement statement = this.connection.createStatement()) {
             // получяем только активные задания
-            // ResultSet rs = statement.executeQuery("SELECT id, name, execute_date, state FROM main.jobs WHERE state = 'active';");
-            // TODO для теста !! удалить после теста
-            ResultSet rs = statement.executeQuery("SELECT * FROM job;");
-            Random random = new Random();
+            ResultSet rs = statement.executeQuery("SELECT * FROM main.job WHERE state = 'NEW';");
 
             while (rs.next()) {
-                Job job = new Job(rs.getInt("id"), rs.getString("name"), rs.getString("state"), rs.getString("departure_date"));
+                Job job = new Job(rs.getInt("id"), rs.getString("name"), rs.getString("state"), rs.getString("departure_date"), rs.getInt("prior_to_reg"));
                 job.setTickets(getTicketByJobId(job.getId()));
-                // TODO для теста !! удалить после теста
-                int rnd = random.nextInt(30);
-                job.setDepartureDate(LocalDateTime.now().plusSeconds(3610 + rnd).toString());
-                job.setState("NEW");
-                job.setName("JOB#" + rnd);
+                job.setState(JobState.NEW.toString());
+                job.setName("JOB#" + job.getId());
                 jobs.add(job);
             }
         } catch (SQLException ex) {
@@ -216,7 +212,7 @@ public class DbHandler {
             ResultSet rs = statement.executeQuery("SELECT * FROM job WHERE id = " + id);
             rs.next();
             logger.info("Result select job: " + rs.getRow());
-            return new Job(id, rs.getString("name"), rs.getString("state"), rs.getString("departure_date"));
+            return new Job(id, rs.getString("name"), rs.getString("state"), rs.getString("departure_date"), rs.getInt("prior_to_reg"));
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Failed to create statement", ex);
         }
@@ -232,10 +228,10 @@ public class DbHandler {
     public synchronized void saveJob(Job job) {
 
         Job savedJob = getJob(job.getId());
-        String smnt = "UPDATE job SET (name, state, departure_date) = (?, ?, ?) WHERE id = " + job.getId() + ";";
+        String smnt = "UPDATE job SET (name, state, departure_date, prior_to_reg) = (?, ?, ?, ?) WHERE id = " + job.getId() + ";";
 
         if (savedJob == null) {
-            smnt = "INSERT INTO job (name, state, departure_date) VALUES (?, ?, ?);";
+            smnt = "INSERT INTO job (name, state, departure_date, prior_to_reg) VALUES (?, ?, ?, ?);";
             logger.info("Save new job with name: " + job.getName());
         } else {
             logger.info("Update saved job with name: " + savedJob.getName());
@@ -246,6 +242,7 @@ public class DbHandler {
             statement.setString(1, job.getName());
             statement.setString(2, job.getState());
             statement.setString(3, String.valueOf(job.getDepartureDateTimestamp()));
+            statement.setInt(4, job.getPriorToReg());
 
             if (statement.executeUpdate() == 0) {
                 logger.warning("Save job error");
