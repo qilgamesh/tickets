@@ -20,21 +20,21 @@ public class Job {
     private int id;
     private transient final StringProperty name;
 
-    private transient final StringProperty state;
+    private transient final ObjectProperty<JobState> state;
     private transient final ObjectProperty<LocalDateTime> departureDate;
     private transient final IntegerProperty priorToReg;
     private SimpleListProperty<Ticket> tickets = new SimpleListProperty<>(this, "tickets");
 
     public Job() {
-        this.name = new SimpleStringProperty("Job# " + (DbHandler.getInstance().getJobsCount() + 1));
-        this.state = new SimpleStringProperty(null);
+        this.name = new SimpleStringProperty("Job#" + (DbHandler.getInstance().getJobsCount() + 1));
+        this.state = new SimpleObjectProperty<>(JobState.NEW);
         this.departureDate = new SimpleObjectProperty<>(null);
         this.priorToReg = new SimpleIntegerProperty(24);
     }
 
     public Job(String name, String state, LocalDateTime departureDate, int priorToReg) {
         this.name = new SimpleStringProperty(name);
-        this.state = new SimpleStringProperty(state);
+        this.state = new SimpleObjectProperty<>(JobState.valueOf(state));
         this.departureDate = new SimpleObjectProperty<>(departureDate);
         this.priorToReg = new SimpleIntegerProperty(priorToReg);
     }
@@ -64,15 +64,19 @@ public class Job {
         this.name.set(name);
     }
 
-    public String getState() {
+    public JobState getState() {
         return state.get();
     }
 
-    public StringProperty stateProperty() {
+    public ObjectProperty<JobState> stateProperty() {
         return state;
     }
 
     public void setState(String state) {
+        this.state.set(JobState.valueOf(state));
+    }
+
+    public void setState(JobState state) {
         this.state.set(state);
     }
 

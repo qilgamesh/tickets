@@ -11,6 +11,7 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.Job;
+import model.JobState;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -36,7 +37,7 @@ public class MainController {
     @FXML
     private TableColumn<Job, LocalDateTime> departureCol;
     @FXML
-    private TableColumn<Job, String> stateCol;
+    private TableColumn<Job, JobState> stateCol;
 
     private ObservableList<Job> jobs;
     private JobHandler jobHandler = JobHandler.getInstance();
@@ -63,6 +64,16 @@ public class MainController {
 
         departureCol.setCellValueFactory(cellData -> cellData.getValue().departureDateProperty());
         stateCol.setCellValueFactory(cellData -> cellData.getValue().stateProperty());
+        stateCol.setCellFactory(column -> new TableCell<Job, JobState>() {
+            @Override
+            protected void updateItem(JobState item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    setText(item.getDescription());
+                }
+            }
+        });
 
         jobsTable.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> updateButton.setDisable(newValue == null));
         jobsTable.setItems(this.jobs);
@@ -98,6 +109,7 @@ public class MainController {
             Stage dialogStage = new Stage();
             dialogStage.setTitle("Редактирование транзакции");
             dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.setResizable(false);
             dialogStage.initOwner(primaryStage);
             Scene scene = new Scene(page);
             dialogStage.setScene(scene);
@@ -116,7 +128,7 @@ public class MainController {
         Job newJob = new Job();
         showJobEditDialog(newJob);
 
-        if (newJob.getState().equals("NEW")) {
+        if (newJob.getState() == JobState.NEW) {
             jobs.add(newJob);
         }
     }
@@ -128,7 +140,7 @@ public class MainController {
         if (job != null) {
             showJobEditDialog(job);
 
-            if (job.getState().equals("NEW")) {
+            if (job.getState() == JobState.NEW) {
                 jobHandler.updateJob(job);
             }
         }

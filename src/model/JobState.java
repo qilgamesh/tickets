@@ -6,8 +6,9 @@ package model;
  * Created by Andrey Semenyuk on 2017.
  */
 public enum JobState {
+
     ACTIVE("Активно"),
-    EDITABLE("Редактируемое"),
+    EDITABLE("Редактируется"),
     EMPTY(""),
     COMPLETED("Завершено"),
     NEW("Новое"),

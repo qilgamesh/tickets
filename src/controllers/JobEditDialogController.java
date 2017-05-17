@@ -194,7 +194,7 @@ public class JobEditDialogController {
         populateJobFields();
 
         if (validateJob()) {
-            job.setState(JobState.NEW.toString());
+            job.setState(JobState.NEW);
             dialogStage.close();
         }
     }
@@ -221,12 +221,17 @@ public class JobEditDialogController {
     }
 
     public void handleCancel() {
+
+        if (this.job.getId() > 0) {
+            job.setState(JobState.NEW);
+        }
+
         dialogStage.close();
     }
 
     void setJob(Job job) {
 
-        job.setState(JobState.EDITABLE.toString());
+        job.setState(JobState.EDITABLE);
         this.job = job;
         descriptionField.setText(job.getName());
 

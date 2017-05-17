@@ -5,6 +5,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import model.Job;
 import model.JobState;
+import processors.CheckInProcessor;
 import utils.LogUtils;
 
 import java.io.BufferedReader;
@@ -83,35 +84,17 @@ public class JobHandler {
      */
     private void scheduleJob(Job job) {
 
-        if (job.getState().equals(JobState.COMPLETED.toString())) {
+        if (job.getState() == JobState.COMPLETED) {
             return;
         }
 
-        Random random = new Random();
-
-        final Runnable jobRun = () -> {
-            if (job.getState().equals(JobState.EDITABLE.toString())) {
-                return;
-            }
-
-            logger.info("Running job: " + job.getName());
-            job.setState(JobState.CHECKIN.getDescription());
-
-            try {
-                Thread.sleep(job.getTickets().size() * 100 * random.nextInt(100));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            job.setState(JobState.COMPLETED.toString());
-            job.save();
-        };
+        final Runnable jobRun = new CheckInProcessor(job);
 
         long delay = job.getDepartureDateTimestamp() - getCurrentSecond() - job.getPriorToReg()*3600;
         logger.info("delay: " + delay + " сек");
 
         runningJobs.put(job, scheduler.schedule(jobRun, delay, TimeUnit.SECONDS));
-        job.setState(JobState.ACTIVE.toString());
+        job.setState(JobState.ACTIVE);
     }
 
     /**
@@ -137,7 +120,7 @@ public class JobHandler {
     public void updateJob(Job job) {
         removeJob(job);
         job.save();
-        job.setState(JobState.NEW.toString());
+        job.setState(JobState.NEW);
         scheduleJob(job);
     }
 

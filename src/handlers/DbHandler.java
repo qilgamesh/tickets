@@ -147,14 +147,15 @@ public class DbHandler {
         List<Job> jobs = new ArrayList<>();
 
         try (Statement statement = this.connection.createStatement()) {
-            // получяем только активные задания
+            // получяем только новые задания
             ResultSet rs = statement.executeQuery("SELECT * FROM main.job WHERE state = 'NEW';");
+//            ResultSet rs = statement.executeQuery("SELECT * FROM main.job ;");
 
             while (rs.next()) {
                 Job job = new Job(rs.getInt("id"), rs.getString("name"), rs.getString("state"), rs.getString("departure_date"), rs.getInt("prior_to_reg"));
                 job.setTickets(getTicketByJobId(job.getId()));
-                job.setState(JobState.NEW.toString());
-                job.setName("JOB#" + job.getId());
+                job.setState(JobState.NEW);
+                job.setName("Job#" + job.getId());
                 jobs.add(job);
             }
         } catch (SQLException ex) {
@@ -243,7 +244,7 @@ public class DbHandler {
         try {
             PreparedStatement statement = this.connection.prepareStatement(smnt);
             statement.setString(1, job.getName());
-            statement.setString(2, job.getState());
+            statement.setString(2, job.getState().toString());
             statement.setString(3, String.valueOf(job.getDepartureDateTimestamp()));
             statement.setInt(4, job.getPriorToReg());
 
