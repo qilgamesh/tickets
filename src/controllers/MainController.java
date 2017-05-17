@@ -123,7 +123,7 @@ public class MainController {
         }
     }
 
-    public void handleAddJob(ActionEvent actionEvent) {
+    public void handleAddJob() {
 
         Job newJob = new Job();
         showJobEditDialog(newJob);
@@ -133,7 +133,7 @@ public class MainController {
         }
     }
 
-    public void handleUpdateJob(ActionEvent actionEvent) {
+    public void handleUpdateJob() {
 
         Job job = jobsTable.getSelectionModel().getSelectedItem();
 

@@ -38,6 +38,10 @@ public class JobEditDialogController {
     private TextField priorToRegField;
     @FXML
     private TableView<Ticket> ticketTable;
+    @FXML
+    private TableColumn<Ticket, String> lastNameCol;
+    @FXML
+    private TableColumn<Ticket, String> numberCol;
 
     private Stage dialogStage;
     private Job job;
@@ -50,6 +54,8 @@ public class JobEditDialogController {
     private void initialize() {
 
         ticketTable.setItems(tickets);
+        lastNameCol.setCellValueFactory(cellData -> cellData.getValue().lastNameProperty());
+        numberCol.setCellValueFactory(cellData -> cellData.getValue().numberProperty());
 
         descriptionField.textProperty().addListener((observableValue, oldValue, newValue) -> {
             if (newValue == null || newValue.length() == 0) {
@@ -71,22 +77,22 @@ public class JobEditDialogController {
                     }
                     break;
                 case 1:
-                    if (!change.isDeleted() && !change.getControlNewText().matches("(0[1-9]|1[0-9]|2[0-3])")) {
+                    if (!change.isDeleted() && !change.getControlNewText().matches("(0[0-9]|1[0-9]|2[0-3])")) {
                         return null;
                     }
                     break;
                 case 2:
-                    if (!change.isDeleted() && !change.getControlNewText().matches("(0[1-9]|1[0-9]|2[0-3])(:|[0-5])")) {
+                    if (!change.isDeleted() && !change.getControlNewText().matches("(0[0-9]|1[0-9]|2[0-3])(:|[0-5])")) {
                         return null;
                     }
                     break;
                 case 3:
-                    if (!change.isDeleted() && !change.getControlNewText().matches("(0[1-9]|1[0-9]|2[0-3])(:[0-5]|[0-5][0-9])")) {
+                    if (!change.isDeleted() && !change.getControlNewText().matches("(0[0-9]|1[0-9]|2[0-3])(:[0-5]|[0-5][0-9])")) {
                         return null;
                     }
                     break;
                 case 4:
-                    if (!change.isDeleted() && !change.getControlNewText().matches("(0[1-9]|1[0-9]|2[0-3])(:[0-5][0-9])")) {
+                    if (!change.isDeleted() && !change.getControlNewText().matches("(0[0-9]|1[0-9]|2[0-3])(:[0-5][0-9])")) {
                         return null;
                     }
                     break;
@@ -102,7 +108,7 @@ public class JobEditDialogController {
                     return departureTimeField.getText();
                 }
 
-                if (commitedText.length() == 4 && commitedText.matches("(0[1-9]|1[0-9]|2[0-3])([0-5][0-9])")) {
+                if (commitedText.length() == 4 && commitedText.matches("(0[0-9]|1[0-9]|2[0-3])([0-5][0-9])")) {
                     return String.format("%s:%s", commitedText.substring(0, 2), commitedText.substring(2, 4));
                 }
                 return departureTimeField.getText();
@@ -209,6 +215,14 @@ public class JobEditDialogController {
             job.setDepartureDate(LocalDateTime.of(departureDatePicker.getValue(), LocalTime.parse(departureTimeField.getText())));
         }
 
+        for (Ticket ticket : tickets) {
+            ticket.setDate(job.getDepartureDate().toLocalDate());
+
+            if (job.getId() > 0) {
+                ticket.setJobId(job.getId());
+            }
+        }
+
         if (tickets.size() > 0) {
             job.setTickets(tickets);
         }
@@ -240,8 +254,9 @@ public class JobEditDialogController {
             departureTimeField.setText(job.getDepartureDate().toLocalTime().format(DateTimeFormatter.ofPattern("HHmm")));
         }
 
-        if (job.getTickets() != null) {
+        if (job.getId() > 0) {
             tickets = job.getTickets();
+            ticketTable.setItems(tickets);
         }
 
         if (job.getPriorToReg() != 24) {
@@ -255,7 +270,14 @@ public class JobEditDialogController {
 
     public void addTicket() {
 
-        tickets.add(new Ticket("FAM", "1234567890", LocalDate.now().toString(), "SR301", 0));
+        Ticket ticket = new Ticket();
+
+        if (job.getId() > 0) {
+            ticket.setJobId(job.getId());
+            ticket.setDate(job.getDepartureDate().toLocalDate());
+        }
+
+        tickets.add(ticket);
     }
 
     public void handleIncrement() {

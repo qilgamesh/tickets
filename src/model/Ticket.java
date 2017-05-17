@@ -24,10 +24,10 @@ public class Ticket {
 
     // TODO для теста !! удалить после теста
     public Ticket() {
-        this.lastName = new SimpleStringProperty(null);
-        this.number = new SimpleStringProperty(null);
-        this.date = new SimpleObjectProperty<>(null);
-        this.flightNumber = new SimpleStringProperty(null);
+        this.lastName = new SimpleStringProperty("TEST");
+        this.number = new SimpleStringProperty("123456");
+        this.date = new SimpleObjectProperty<>(LocalDate.now().plusDays(1));
+        this.flightNumber = new SimpleStringProperty("ZF9999");
     }
 
     public Ticket(int id, String lastName, String number, String date, String flightNumber, int jobId) {
