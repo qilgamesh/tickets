@@ -132,6 +132,7 @@ public class DbHandler {
                 }
             }
 
+            logger.info("End migrate");
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Failed to execute migrate tables: ", ex);
         }
@@ -198,6 +199,7 @@ public class DbHandler {
             while (rs.next()) {
                 tickets.add(new Ticket(rs.getInt("id"), rs.getString("last_name"), rs.getString("number"), rs.getString("date"), rs.getString("flight_number"), id));
             }
+
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Failed to get tickets for job id= " + id, ex);
         }
@@ -215,8 +217,9 @@ public class DbHandler {
             Statement statement = this.connection.createStatement();
             ResultSet rs = statement.executeQuery("SELECT * FROM job WHERE id = " + id);
             rs.next();
-            logger.info("Result select job: " + rs.getRow());
+
             return new Job(id, rs.getString("name"), rs.getString("state"), rs.getString("departure_date"), rs.getInt("prior_to_reg"));
+
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Failed to create statement", ex);
         }
@@ -236,9 +239,6 @@ public class DbHandler {
 
         if (savedJob == null) {
             smnt = "INSERT INTO job (name, state, departure_date, prior_to_reg) VALUES (?, ?, ?, ?);";
-            logger.info("Save new job with name: " + job.getName());
-        } else {
-            logger.info("Update saved job with name: " + savedJob.getName());
         }
 
         try {
@@ -254,11 +254,8 @@ public class DbHandler {
 
             if (savedJob == null) {
                 int id = statement.getGeneratedKeys().getInt(1);
-                logger.info("New job successful saved (id: " + id + ")");
                 job.getTickets().forEach(ticket -> ticket.setJobId(id));
                 job.setId(id);
-            } else {
-                logger.info("Job successful updated (id=" + job.getId() + ")");
             }
 
             job.getTickets().forEach(this::saveTicket);
@@ -301,9 +298,6 @@ public class DbHandler {
 
         if (savedTicket == null) {
             smnt = "INSERT INTO ticket (last_name, number, date, job_id) VALUES (?, ?, ?, ?);";
-            logger.info("Save new ticket for job id: " + ticket.getJobId());
-        } else {
-            logger.info("Update saved ticket for job id: " + savedTicket.getJobId());
         }
 
         try {
@@ -318,12 +312,6 @@ public class DbHandler {
                 return;
             }
 
-            if (savedTicket == null) {
-                int id = statement.getGeneratedKeys().getInt(1);
-                logger.info("New ticket successful saved (id: " + id + ")");
-            } else {
-                logger.info("Ticket successful updated (id=" + ticket.getId() + ")");
-            }
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Failed to create statement", ex);
         }
@@ -341,12 +329,7 @@ public class DbHandler {
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Failed to get airplanes: ", ex);
         }
-        // TODO для теста!
-        if (airplanes.size() == 0) {
-            airplanes.add(new Airplane(1, "Boeng-777"));
-            airplanes.add(new Airplane(2, "Airbus A310"));
-            airplanes.add(new Airplane(3, "Airbus A320"));
-        }
+
         return airplanes;
     }
 }
