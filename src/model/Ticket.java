@@ -85,12 +85,10 @@ public class Ticket {
     public boolean validate() {
 
         if (getLastName() == null || getLastName().equals("")) {
-            System.out.println("\n Ticket validate error: last name is blank");
             return false;
         }
 
         if (getNumber() == null || getNumber().equals("")) {
-            System.out.println("\n Ticket validate error: number is blank");
             return false;
         }
 

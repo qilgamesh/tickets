@@ -25,6 +25,8 @@ public class Job {
     private transient final ObjectProperty<LocalDateTime> departureDate;
     private transient final StringProperty flightNumber;
     private transient final IntegerProperty priorToReg;
+    private transient final LongProperty secondsToReg;
+
     private ObservableList<Ticket> tickets = FXCollections.observableArrayList();
 
     public Job() {
@@ -33,6 +35,7 @@ public class Job {
         this.departureDate = new SimpleObjectProperty<>(null);
         this.flightNumber = new SimpleStringProperty(null);
         this.priorToReg = new SimpleIntegerProperty(24);
+        this.secondsToReg = new SimpleLongProperty(0);
     }
 
     public Job(String name, String state, LocalDateTime departureDate, String flightNumber, int priorToReg) {
@@ -41,6 +44,7 @@ public class Job {
         this.departureDate = new SimpleObjectProperty<>(departureDate);
         this.flightNumber = new SimpleStringProperty(flightNumber);
         this.priorToReg = new SimpleIntegerProperty(priorToReg);
+        this.secondsToReg = new SimpleLongProperty(0);
     }
 
     public Job(int id, String name, String state, String departureDateTimestamp, String flightNumber, int priorToReg) {
@@ -155,30 +159,37 @@ public class Job {
     public boolean validate() {
 
         if (getTickets().size() == 0) {
-            System.out.println("\n Job validate error: ticket size is 0");
             return false;
         }
 
         if (getPriorToReg() == 0) {
-            System.out.println("\n Job validate error: priorToReg is 0");
             return false;
         }
 
         if (getDepartureDate().isBefore(LocalDateTime.now())) {
-            System.out.println("\n Job validate error: departure date is before now");
             return false;
         }
 
         if (getFlightNumber() == null || getFlightNumber().equals("")) {
-            System.out.println("\n Job validate error: flight number is blank");
             return false;
         }
 
         if (getName() == null || getName().equals("")) {
-            System.out.println("\n Job validate error: name is blank");
             return false;
         }
 
         return true;
+    }
+
+    public void setSecondsToReg(long secondsToReg) {
+        this.secondsToReg.set(secondsToReg);
+    }
+
+    public long getSecondsToReg() {
+        return secondsToReg.get();
+    }
+
+    public LongProperty secondsToRegProperty() {
+        return secondsToReg;
     }
 }

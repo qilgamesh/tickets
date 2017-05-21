@@ -1,7 +1,6 @@
 package controllers;
 
 import handlers.JobHandler;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -38,6 +37,8 @@ public class MainController {
     @FXML
     private TableColumn<Job, LocalDateTime> departureCol;
     @FXML
+    private TableColumn<Job, Number> timerToReg;
+    @FXML
     private TableColumn<Job, JobState> stateCol;
 
     private ObservableList<Job> jobs;
@@ -46,6 +47,8 @@ public class MainController {
     @FXML
     private void initialize() {
 
+        jobs = jobHandler.getJobs();
+
         MenuItem item1 = new MenuItem("Изменить");
         item1.setOnAction(event -> handleUpdateJob());
         MenuItem item2 = new MenuItem("Скрыть");
@@ -53,8 +56,6 @@ public class MainController {
 
         ContextMenu contextMenu = new ContextMenu();
         contextMenu.getItems().addAll(item1, item2);
-
-        jobs = jobHandler.getJobs();
 
         nameCol.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
         ticketsCol.setCellValueFactory(cellData -> cellData.getValue().ticketsCount());
@@ -72,6 +73,24 @@ public class MainController {
         });
 
         departureCol.setCellValueFactory(cellData -> cellData.getValue().departureDateProperty());
+
+        timerToReg.setCellValueFactory(cellData -> cellData.getValue().secondsToRegProperty());
+        timerToReg.setCellFactory(tc -> new TableCell<Job, Number>() {
+            @Override
+            protected void updateItem(Number value, boolean empty) {
+                super.updateItem(value, empty);
+
+                if (value == null || value.intValue() == 0 || empty) {
+                    setText("");
+                } else {
+                    int hours = value.intValue() / 3600;
+                    int min = (value.intValue() - hours * 3600) / 60;
+                    int sec = value.intValue() - min * 60 - hours * 3600;
+                    setText(String.format("%sч. %sм. %sс.", String.valueOf(hours), String.valueOf(min), String.valueOf(sec)));
+                }
+            }
+        });
+
         stateCol.setCellValueFactory(cellData -> cellData.getValue().stateProperty());
         stateCol.setCellFactory(column -> new TableCell<Job, JobState>() {
             @Override

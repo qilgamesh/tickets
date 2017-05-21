@@ -1,8 +1,11 @@
 package handlers;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.util.Duration;
 import model.Job;
 import model.JobState;
 import processors.CheckInProcessor;
@@ -79,7 +82,7 @@ public class JobHandler {
      */
     private void scheduleJob(Job job) {
 
-        long delay = job.getDepartureDateTimestamp() - DateTimeProcessor.getCurrentSecond() - job.getPriorToReg() * 3600;
+        Long delay = job.getDepartureDateTimestamp() - DateTimeProcessor.getCurrentSecond() - job.getPriorToReg() * 3600;
 
         if (job.getState() != JobState.NEW) {
             if (delay < 0) {
@@ -89,6 +92,19 @@ public class JobHandler {
             return;
         }
 
+        Timeline countdown = new Timeline();
+        countdown.setCycleCount(Timeline.INDEFINITE);
+        job.setSecondsToReg(delay);
+        countdown.getKeyFrames().add(new KeyFrame(Duration.seconds(1), event -> {
+            long newTime = job.getSecondsToReg() - 1;
+            if (newTime <= 0 || job.getState() != JobState.ACTIVE) {
+                job.setSecondsToReg(0);
+                countdown.stop();
+            }
+            job.setSecondsToReg(newTime);
+        }));
+
+        countdown.playFromStart();
         runningJobs.put(job, scheduler.schedule(new CheckInProcessor(job), delay, TimeUnit.SECONDS));
         job.setState(JobState.ACTIVE);
     }
