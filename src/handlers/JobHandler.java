@@ -6,20 +6,15 @@ import javafx.collections.ObservableList;
 import model.Job;
 import model.JobState;
 import processors.CheckInProcessor;
+import processors.DateTimeProcessor;
 import utils.LogUtils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -84,16 +79,17 @@ public class JobHandler {
      */
     private void scheduleJob(Job job) {
 
-        if (job.getState() == JobState.COMPLETED) {
+        long delay = job.getDepartureDateTimestamp() - DateTimeProcessor.getCurrentSecond() - job.getPriorToReg() * 3600;
+
+        if (job.getState() != JobState.NEW) {
+            if (delay < 0) {
+                job.setState(JobState.COMPLETED);
+                job.save();
+            }
             return;
         }
 
-        final Runnable jobRun = new CheckInProcessor(job);
-
-        long delay = job.getDepartureDateTimestamp() - getCurrentSecond() - job.getPriorToReg()*3600;
-        logger.info("delay: " + delay + " сек");
-
-        runningJobs.put(job, scheduler.schedule(jobRun, delay, TimeUnit.SECONDS));
+        runningJobs.put(job, scheduler.schedule(new CheckInProcessor(job), delay, TimeUnit.SECONDS));
         job.setState(JobState.ACTIVE);
     }
 
@@ -122,25 +118,6 @@ public class JobHandler {
         job.save();
         job.setState(JobState.NEW);
         scheduleJob(job);
-    }
-
-    /**
-     * Получает текущее время в секундах из сервиса точного времени, если не удаётся - берём системное
-     *
-     * @return long
-     */
-    private long getCurrentSecond() {
-        URL url;
-
-        try {
-            url = new URL(timeUrl);
-            BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
-            return Long.valueOf(br.readLine());
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, "Failed to sync time from " + timeUrl, ex);
-            logger.info("Get time from system");
-            return System.currentTimeMillis() / 1000;
-        }
     }
 
     /**

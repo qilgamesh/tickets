@@ -4,7 +4,13 @@ import model.Job;
 import model.JobState;
 import utils.LogUtils;
 
-import java.util.Random;
+import javax.net.ssl.HttpsURLConnection;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -12,8 +18,10 @@ import java.util.logging.Logger;
  */
 public class CheckInProcessor implements Runnable {
 
-    private Job job;
+    private final static String BASE_URL = "https://api.telegram.org/bot312066192:AAHEbbCcYqkj463wVDIm0C8ou_sRMEPvbIc/sendMessage?chat_id=-228942046&parse_mode=HTML&text=";
     private final static Logger logger = LogUtils.getLogger();
+
+    private Job job;
 
     public CheckInProcessor(Job job) {
         this.job = job;
@@ -28,15 +36,29 @@ public class CheckInProcessor implements Runnable {
 
         logger.info("Running job: " + job.getName());
         job.setState(JobState.CHECKIN);
-        Random random = new Random();
 
         try {
-            Thread.sleep(job.getTickets().size() * 100 * random.nextInt(100));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+            String curTime = DateTimeProcessor.getCurrentDateTime().toLocalTime().toString();
+            String message = URLEncoder.encode("<b>Старт:</b> " + job.getName() + ", <b>Время:</b> " + curTime, "UTF-8");
+            HttpsURLConnection connection = (HttpsURLConnection) new URL(BASE_URL + message).openConnection();
+            connection.addRequestProperty("User-Agent", "Tickets app");
 
-        job.setState(JobState.COMPLETED);
-        job.save();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+
+            logger.info("Job checkin result: " + sb.toString());
+
+            job.setState(JobState.COMPLETED);
+            job.save();
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, "Failed to checkin", ex);
+            job.setState(JobState.ERROR);
+            job.save();
+        }
     }
 }
