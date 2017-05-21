@@ -98,25 +98,19 @@ public class MainController {
         jobsTable.setItems(jobs);
     }
 
-    private void initContextMenu() {
-
-
-    }
-
     private void handleArchiveJobs() {
 
-        Platform.runLater(() -> {
-            ObservableList<Job> selectedJobs = FXCollections.observableArrayList(jobsTable.getSelectionModel().getSelectedItems());
+        ObservableList<Job> selectedJobs = FXCollections.observableArrayList(jobsTable.getSelectionModel().getSelectedItems());
 
-            for (Job job : selectedJobs) {
-                if (job.getState() == JobState.COMPLETED) {
-                    job.setState(JobState.ARCHIVED);
-                    jobs.remove(job);
-                    job.save();
-                }
+        for (Job job : selectedJobs) {
+            if (job.getState() == JobState.COMPLETED) {
+                job.setState(JobState.ARCHIVED);
+                jobs.remove(job);
+                job.save();
             }
+        }
 
-        });
+        jobsTable.refresh();
     }
 
     @FXML
