@@ -282,6 +282,7 @@ public class JobEditDialogController {
 
         this.job = job;
         descriptionField.setText(job.getName());
+        flightNumberField.setText(job.getFlightNumber());
 
         if (job.getDepartureDate() != null) {
             departureDatePicker.setValue(job.getDepartureDate().toLocalDate());
@@ -313,6 +314,8 @@ public class JobEditDialogController {
             }
 
             tickets.add(ticket);
+            lastNameField.clear();
+            ticketNumberField.clear();
         }
     }
 
