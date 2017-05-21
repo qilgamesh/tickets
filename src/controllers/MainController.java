@@ -1,6 +1,8 @@
 package controllers;
 
 import handlers.JobHandler;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -44,6 +46,14 @@ public class MainController {
     @FXML
     private void initialize() {
 
+        MenuItem item1 = new MenuItem("Изменить");
+        item1.setOnAction(event -> handleUpdateJob());
+        MenuItem item2 = new MenuItem("Скрыть");
+        item2.setOnAction(event -> handleArchiveJobs());
+
+        ContextMenu contextMenu = new ContextMenu();
+        contextMenu.getItems().addAll(item1, item2);
+
         jobs = jobHandler.getJobs();
 
         nameCol.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
@@ -75,13 +85,38 @@ public class MainController {
         });
 
         jobsTable.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> updateButton.setDisable(newValue == null));
+        jobsTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        jobsTable.setContextMenu(contextMenu);
+        jobsTable.getContextMenu().setAutoHide(true);
+
         jobsTable.setOnMouseClicked(mouseEvent -> {
             if (mouseEvent.getClickCount() > 1) {
                 handleUpdateJob();
             }
         });
 
-        jobsTable.setItems(this.jobs);
+        jobsTable.setItems(jobs);
+    }
+
+    private void initContextMenu() {
+
+
+    }
+
+    private void handleArchiveJobs() {
+
+        Platform.runLater(() -> {
+            ObservableList<Job> selectedJobs = FXCollections.observableArrayList(jobsTable.getSelectionModel().getSelectedItems());
+
+            for (Job job : selectedJobs) {
+                if (job.getState() == JobState.COMPLETED) {
+                    job.setState(JobState.ARCHIVED);
+                    jobs.remove(job);
+                    job.save();
+                }
+            }
+
+        });
     }
 
     @FXML

@@ -84,7 +84,8 @@ public class DbHandler {
                             "'name' TEXT," +
                             "'state' TEXT," +
                             "'departure_date' TIMESTAMP," +
-                            "'prior_to_reg' INTEGER DEFAULT 24);"
+                            "'prior_to_reg' INTEGER DEFAULT 24," +
+                            "'flight_number' TEXT);"
             );
             statement.execute(
                     "CREATE TABLE IF NOT EXISTS 'airplane' (" +
@@ -100,7 +101,6 @@ public class DbHandler {
                             "'last_name' TEXT," +
                             "'number' TEXT," +
                             "'date' TEXT," +
-                            "'flight_number' TEXT," +
                             "'job_id' INTEGER REFERENCES job (id));"
             );
         } catch (SQLException ex) {
@@ -148,14 +148,11 @@ public class DbHandler {
         List<Job> jobs = new ArrayList<>();
 
         try (Statement statement = this.connection.createStatement()) {
-            // получяем только новые задания
-            ResultSet rs = statement.executeQuery("SELECT * FROM main.job WHERE state = 'NEW';");
-//            ResultSet rs = statement.executeQuery("SELECT * FROM main.job ;");
+            ResultSet rs = statement.executeQuery("SELECT * FROM main.job WHERE NOT state = 'ARCHIVED';");
 
             while (rs.next()) {
-                Job job = new Job(rs.getInt("id"), rs.getString("name"), rs.getString("state"), rs.getString("departure_date"), rs.getInt("prior_to_reg"));
+                Job job = new Job(rs.getInt("id"), rs.getString("name"), rs.getString("state"), rs.getString("departure_date"), rs.getString("flight_number"), rs.getInt("prior_to_reg"));
                 job.setTickets(getTicketByJobId(job.getId()));
-                job.setState(JobState.NEW);
                 job.setName("Job#" + job.getId());
                 jobs.add(job);
             }
@@ -197,7 +194,7 @@ public class DbHandler {
             ResultSet rs = statement.executeQuery("SELECT * FROM ticket WHERE job_id = " + id);
 
             while (rs.next()) {
-                tickets.add(new Ticket(rs.getInt("id"), rs.getString("last_name"), rs.getString("number"), rs.getString("date"), rs.getString("flight_number"), id));
+                tickets.add(new Ticket(rs.getInt("id"), rs.getString("last_name"), rs.getString("number"), id));
             }
 
         } catch (SQLException ex) {
@@ -218,7 +215,7 @@ public class DbHandler {
             ResultSet rs = statement.executeQuery("SELECT * FROM job WHERE id = " + id);
             rs.next();
 
-            return new Job(id, rs.getString("name"), rs.getString("state"), rs.getString("departure_date"), rs.getInt("prior_to_reg"));
+            return new Job(id, rs.getString("name"), rs.getString("state"), rs.getString("departure_date"), rs.getString("flight_number"), rs.getInt("prior_to_reg"));
 
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Failed to create statement", ex);
@@ -235,10 +232,10 @@ public class DbHandler {
     public synchronized void saveJob(Job job) {
 
         Job savedJob = getJob(job.getId());
-        String smnt = "UPDATE job SET (name, state, departure_date, prior_to_reg) = (?, ?, ?, ?) WHERE id = " + job.getId() + ";";
+        String smnt = "UPDATE job SET (name, state, departure_date, flight_number, prior_to_reg) = (?, ?, ?, ?, ?) WHERE id = " + job.getId() + ";";
 
         if (savedJob == null) {
-            smnt = "INSERT INTO job (name, state, departure_date, prior_to_reg) VALUES (?, ?, ?, ?);";
+            smnt = "INSERT INTO job (name, state, departure_date, flight_number, prior_to_reg) VALUES (?, ?, ?, ?, ?);";
         }
 
         try {
@@ -246,7 +243,8 @@ public class DbHandler {
             statement.setString(1, job.getName());
             statement.setString(2, job.getState().toString());
             statement.setString(3, String.valueOf(job.getDepartureDateTimestamp()));
-            statement.setInt(4, job.getPriorToReg());
+            statement.setString(4, job.getFlightNumber());
+            statement.setInt(5, job.getPriorToReg());
 
             if (statement.executeUpdate() == 0) {
                 logger.warning("Save job error");
@@ -276,7 +274,7 @@ public class DbHandler {
             ResultSet rs = statement.executeQuery("SELECT * FROM ticket WHERE id = " + id);
             rs.next();
 
-            return new Ticket(id, rs.getString(2), rs.getString(3), rs.getString(4), rs.getString(5), rs.getInt(6));
+            return new Ticket(id, rs.getString("last_name"), rs.getString("number"), rs.getInt("job_id"));
 
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Failed to create statement", ex);
@@ -292,20 +290,19 @@ public class DbHandler {
      */
     public synchronized void saveTicket(Ticket ticket) {
 
-        String smnt = "UPDATE ticket SET (last_name, number, date, job_id) = (?, ?, ?, ?) WHERE id = " + ticket.getId() + ";";
+        String smnt = "UPDATE ticket SET (last_name, number, job_id) = (?, ?, ?) WHERE id = " + ticket.getId() + ";";
 
         Ticket savedTicket = getTicket(ticket.getId());
 
         if (savedTicket == null) {
-            smnt = "INSERT INTO ticket (last_name, number, date, job_id) VALUES (?, ?, ?, ?);";
+            smnt = "INSERT INTO ticket (last_name, number, job_id) VALUES (?, ?, ?);";
         }
 
         try {
             PreparedStatement statement = this.connection.prepareStatement(smnt);
             statement.setString(1, ticket.getLastName());
             statement.setString(2, ticket.getNumber());
-            statement.setString(3, ticket.getDate().toString());
-            statement.setInt(4, ticket.getJobId());
+            statement.setInt(3, ticket.getJobId());
 
             if (statement.executeUpdate() == 0) {
                 logger.warning("Save ticket error");

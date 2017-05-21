@@ -23,6 +23,7 @@ public class Job {
 
     private transient final ObjectProperty<JobState> state;
     private transient final ObjectProperty<LocalDateTime> departureDate;
+    private transient final StringProperty flightNumber;
     private transient final IntegerProperty priorToReg;
     private ObservableList<Ticket> tickets = FXCollections.observableArrayList();
 
@@ -30,18 +31,20 @@ public class Job {
         this.name = new SimpleStringProperty("Job#" + (DbHandler.getInstance().getJobsCount() + 1));
         this.state = new SimpleObjectProperty<>(JobState.NEW);
         this.departureDate = new SimpleObjectProperty<>(null);
+        this.flightNumber = new SimpleStringProperty(null);
         this.priorToReg = new SimpleIntegerProperty(24);
     }
 
-    public Job(String name, String state, LocalDateTime departureDate, int priorToReg) {
+    public Job(String name, String state, LocalDateTime departureDate, String flightNumber, int priorToReg) {
         this.name = new SimpleStringProperty(name);
         this.state = new SimpleObjectProperty<>(JobState.valueOf(state));
         this.departureDate = new SimpleObjectProperty<>(departureDate);
+        this.flightNumber = new SimpleStringProperty(flightNumber);
         this.priorToReg = new SimpleIntegerProperty(priorToReg);
     }
 
-    public Job(int id, String name, String state, String departureDateTimestamp, int priorToReg) {
-        this(name, state, LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.valueOf(departureDateTimestamp)), ZoneId.of("GMT+5")), priorToReg);
+    public Job(int id, String name, String state, String departureDateTimestamp, String flightNumber, int priorToReg) {
+        this(name, state, LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.valueOf(departureDateTimestamp)), ZoneId.of("GMT+5")), flightNumber, priorToReg);
         this.id = id;
     }
 
@@ -101,6 +104,18 @@ public class Job {
         this.departureDate.set(executeDate);
     }
 
+    public String getFlightNumber() {
+        return flightNumber.get();
+    }
+
+    public StringProperty flightNumberProperty() {
+        return flightNumber;
+    }
+
+    public void setFlightNumber(String flightNumber) {
+        this.flightNumber.set(flightNumber);
+    }
+
     public int getPriorToReg() {
         return priorToReg.get();
     }
@@ -135,5 +150,35 @@ public class Job {
 
     public void addTicket(Ticket ticket) {
         tickets.add(ticket);
+    }
+
+    public boolean validate() {
+
+        if (getTickets().size() == 0) {
+            System.out.println("\n Job validate error: ticket size is 0");
+            return false;
+        }
+
+        if (getPriorToReg() == 0) {
+            System.out.println("\n Job validate error: priorToReg is 0");
+            return false;
+        }
+
+        if (getDepartureDate().isBefore(LocalDateTime.now())) {
+            System.out.println("\n Job validate error: departure date is before now");
+            return false;
+        }
+
+        if (getFlightNumber() == null || getFlightNumber().equals("")) {
+            System.out.println("\n Job validate error: flight number is blank");
+            return false;
+        }
+
+        if (getName() == null || getName().equals("")) {
+            System.out.println("\n Job validate error: name is blank");
+            return false;
+        }
+
+        return true;
     }
 }

@@ -36,8 +36,8 @@
          <children>
             <HBox alignment="CENTER_LEFT" spacing="10.0">
                <children>
-                <Button mnemonicParsing="false" onAction="#handleAddJob" text="Добавить" />
-                <Button fx:id="updateButton" disable="true" mnemonicParsing="false" onAction="#handleUpdateJob" text="Изменить" />
+                <Button maxWidth="85.0" minWidth="85.0" mnemonicParsing="false" onAction="#handleAddJob" prefWidth="85.0" text="Добавить" />
+                <Button fx:id="updateButton" disable="true" maxWidth="85.0" minWidth="85.0" mnemonicParsing="false" onAction="#handleUpdateJob" prefWidth="85.0" text="Изменить" />
                </children>
                <padding>
                   <Insets left="10.0" />

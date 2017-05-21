@@ -18,32 +18,19 @@ public class Ticket {
 
     private transient final StringProperty lastName;
     private transient final StringProperty number;
-    private transient final StringProperty flightNumber;
-    private transient final ObjectProperty<LocalDate> date;
 
-
-    // TODO для теста !! удалить после теста
-    public Ticket() {
-        this.lastName = new SimpleStringProperty("TEST");
-        this.number = new SimpleStringProperty("123456");
-        this.date = new SimpleObjectProperty<>(LocalDate.now().plusDays(1));
-        this.flightNumber = new SimpleStringProperty("ZF9999");
-    }
-
-    public Ticket(int id, String lastName, String number, String date, String flightNumber, int jobId) {
-        this(lastName, number, date, flightNumber, jobId);
+    public Ticket(int id, String lastName, String number, int jobId) {
+        this(lastName, number, jobId);
         this.id = id;
     }
 
-    public Ticket(String lastName, String number, String date, String flightNumber) {
+    public Ticket(String lastName, String number) {
         this.lastName = new SimpleStringProperty(lastName);
         this.number = new SimpleStringProperty(number);
-        this.date = new SimpleObjectProperty<>(LocalDate.parse(date));
-        this.flightNumber = new SimpleStringProperty(flightNumber);
     }
 
-    public Ticket(String lastName, String number, String date, String flightNumber, int jobId) {
-        this(lastName, number, date, flightNumber);
+    public Ticket(String lastName, String number, int jobId) {
+        this(lastName, number);
         this.jobId = jobId;
     }
 
@@ -87,39 +74,26 @@ public class Ticket {
         this.number.set(number);
     }
 
-    public LocalDate getDate() {
-        return date.get();
-    }
-
-    public ObjectProperty<LocalDate> dateProperty() {
-        return date;
-    }
-
-    public void setDate(String date) {
-        this.date.set(LocalDate.parse(date));
-    }
-
-    public void setDate(LocalDate date) {
-        this.date.set(date);
-    }
-
-    public String getFlightNumber() {
-        return flightNumber.get();
-    }
-
-    public StringProperty flightNumberProperty() {
-        return flightNumber;
-    }
-
-    public void setFlightNumber(String flightNumber) {
-        this.flightNumber.set(flightNumber);
-    }
-
     public void save() {
         DbHandler.getInstance().saveTicket(this);
     }
 
     public static Ticket get(int id) {
         return DbHandler.getInstance().getTicket(id);
+    }
+
+    public boolean validate() {
+
+        if (getLastName() == null || getLastName().equals("")) {
+            System.out.println("\n Ticket validate error: last name is blank");
+            return false;
+        }
+
+        if (getNumber() == null || getNumber().equals("")) {
+            System.out.println("\n Ticket validate error: number is blank");
+            return false;
+        }
+
+        return true;
     }
 }

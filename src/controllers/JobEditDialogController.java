@@ -2,7 +2,6 @@ package controllers;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -229,19 +228,21 @@ public class JobEditDialogController {
             job.setDepartureDate(LocalDateTime.of(departureDatePicker.getValue(), LocalTime.parse(departureTimeField.getText())));
         }
 
+        if (flightNumberField.getText() != null) {
+            job.setFlightNumber(flightNumberField.getText());
+        }
+
         if (tickets.size() > 0) {
             for (Ticket ticket : tickets) {
-                ticket.setDate(job.getDepartureDate().toLocalDate());
-
                 if (job.getId() > 0) {
                     ticket.setJobId(job.getId());
                 }
-
-                job.addTicket(ticket);
             }
+
+            job.setTickets(tickets);
         } else {
             if (lastNameField.getText().length() > 0 && ticketNumberField.getText().length() > 0) {
-                Ticket ticket = new Ticket(lastNameField.getText(), ticketNumberField.getText(), departureDatePicker.getValue().toString(), flightNumberField.getText());
+                Ticket ticket = new Ticket(lastNameField.getText(), ticketNumberField.getText());
                 job.addTicket(ticket);
             }
         }
@@ -250,12 +251,23 @@ public class JobEditDialogController {
     }
 
     private boolean validateJob() {
-        return job.getName() != null && job.getDepartureDate() != null && job.getTickets().size() > 0;
+        return job.validate() && validateTickets();
+    }
+
+    private boolean validateTickets() {
+
+        for (Ticket ticket : job.getTickets()) {
+            if (!ticket.validate()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public void handleCancel() {
 
-        if (this.job.getId() > 0) {
+        if (job.getId() > 0 && job.getState() != JobState.COMPLETED) {
             job.setState(JobState.NEW);
         }
 
@@ -264,7 +276,10 @@ public class JobEditDialogController {
 
     void setJob(Job job) {
 
-        job.setState(JobState.EDITABLE);
+        if (job.getState() != JobState.COMPLETED) {
+            job.setState(JobState.EDITABLE);
+        }
+
         this.job = job;
         descriptionField.setText(job.getName());
 
@@ -289,14 +304,16 @@ public class JobEditDialogController {
 
     public void addTicket() {
 
-        Ticket ticket = new Ticket();
+        if (lastNameField.getText() != null && ticketNumberField.getText() != null) {
 
-        if (job.getId() > 0) {
-            ticket.setJobId(job.getId());
-            ticket.setDate(job.getDepartureDate().toLocalDate());
+            Ticket ticket = new Ticket(lastNameField.getText(), ticketNumberField.getText());
+
+            if (job.getId() > 0) {
+                ticket.setJobId(job.getId());
+            }
+
+            tickets.add(ticket);
         }
-
-        tickets.add(ticket);
     }
 
     public void handleIncrement() {

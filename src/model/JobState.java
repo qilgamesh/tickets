@@ -8,6 +8,7 @@ package model;
 public enum JobState {
 
     ACTIVE("Активно"),
+    ARCHIVED("Архивный"),
     EDITABLE("Редактируется"),
     EMPTY(""),
     COMPLETED("Завершено"),
