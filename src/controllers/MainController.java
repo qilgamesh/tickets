@@ -195,6 +195,7 @@ public class MainController {
 
             if (job.getState() == JobState.NEW) {
                 jobHandler.updateJob(job);
+                jobsTable.refresh();
             }
         }
     }
