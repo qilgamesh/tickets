@@ -17,29 +17,30 @@
       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
    </columnConstraints>
    <rowConstraints>
-      <RowConstraints maxHeight="160.0" minHeight="160.0" prefHeight="160.0" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="80.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="1.7976931348623157E308" />
+      <RowConstraints maxHeight="40.0" minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="40.0" vgrow="SOMETIMES" />
       <RowConstraints maxHeight="40.0" minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
    </rowConstraints>
    <children>
-      <GridPane maxHeight="-Infinity" maxWidth="-Infinity">
+      <GridPane maxHeight="-Infinity" maxWidth="-Infinity" GridPane.hgrow="ALWAYS">
         <columnConstraints>
           <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="294.0" minWidth="10.0" prefWidth="193.0" />
           <ColumnConstraints hgrow="SOMETIMES" maxWidth="469.0" minWidth="10.0" prefWidth="407.0" />
         </columnConstraints>
         <rowConstraints>
           <RowConstraints maxHeight="40.0" minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
-          <RowConstraints maxHeight="40.0" minHeight="40.0" prefHeight="40.0" valignment="CENTER" vgrow="SOMETIMES" />
             <RowConstraints maxHeight="40.0" minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
+          <RowConstraints maxHeight="40.0" minHeight="40.0" prefHeight="40.0" valignment="CENTER" vgrow="SOMETIMES" />
             <RowConstraints maxHeight="40.0" minHeight="40.0" prefHeight="40.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
-            <Label text="Наименование">
+            <Label text="Наименование задания">
                <padding>
                   <Insets right="10.0" />
                </padding>
             </Label>
-            <Label text="Дата и время вылета" GridPane.rowIndex="1">
+            <Label text="Дата и время вылета" GridPane.rowIndex="2">
                <padding>
                   <Insets right="10.0" />
                </padding>
@@ -49,19 +50,18 @@
                   <Insets />
                </GridPane.margin>
             </TextField>
-            <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" spacing="20.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+            <HBox alignment="CENTER_LEFT" prefHeight="100.0" prefWidth="200.0" spacing="20.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
                <children>
                   <DatePicker fx:id="departureDatePicker" maxWidth="200.0" prefHeight="26.0" prefWidth="126.0" promptText="ДД.ММ.ГГГГ" />
                   <TextField fx:id="departureTimeField" alignment="CENTER" maxWidth="70.0" minWidth="50.0" prefHeight="26.0" prefWidth="70.0" promptText="ЧЧ:ММ" />
                </children>
             </HBox>
-            <Button alignment="CENTER" onAction="#addTicket" prefHeight="26.0" prefWidth="126.0" text="Добавить" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-            <Label text="Начало регистрации за" GridPane.rowIndex="2">
+            <Label text="Начало регистрации за" GridPane.rowIndex="3">
                <padding>
                   <Insets right="10.0" />
                </padding>
             </Label>
-            <HBox alignment="CENTER_LEFT" maxWidth="217.0" minWidth="170.0" prefHeight="40.0" prefWidth="217.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+            <HBox alignment="CENTER_LEFT" maxWidth="217.0" minWidth="170.0" prefHeight="40.0" prefWidth="217.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
                <children>
                   <Button alignment="CENTER" contentDisplay="CENTER" maxWidth="27.0" minWidth="27.0" mnemonicParsing="false" onAction="#handleDecrement" text="−" wrapText="true" />
                   <TextField fx:id="priorToRegField" alignment="CENTER" prefHeight="26.0" prefWidth="72.0" text="24" />
@@ -75,14 +75,15 @@
                   </Button>
                </children>
             </HBox>
-            <Label text="Билеты" GridPane.rowIndex="3">
+            <Label text="Номер рейса" GridPane.rowIndex="1">
                <GridPane.margin>
                   <Insets right="10.0" />
                </GridPane.margin>
             </Label>
+            <TextField fx:id="flightNumberField" maxWidth="216.0" prefHeight="26.0" prefWidth="216.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
          </children>
       </GridPane>
-      <TableView fx:id="ticketTable" GridPane.rowIndex="1">
+      <TableView fx:id="ticketTable" GridPane.rowIndex="2">
         <columns>
           <TableColumn fx:id="lastNameCol" prefWidth="138.0" text="Фамилия" />
           <TableColumn fx:id="numberCol" prefWidth="151.0" text="№ билета" />
@@ -91,7 +92,7 @@
             <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
          </columnResizePolicy>
       </TableView>
-      <HBox alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="200.0" spacing="20.0" GridPane.rowIndex="2">
+      <HBox alignment="CENTER_RIGHT" prefHeight="100.0" prefWidth="200.0" spacing="20.0" GridPane.rowIndex="3">
          <children>
             <Button cancelButton="true" mnemonicParsing="false" onAction="#handleCancel" text="Отмена">
                <opaqueInsets>
@@ -107,6 +108,13 @@
          <padding>
             <Insets right="20.0" />
          </padding>
+      </HBox>
+      <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="20.0" GridPane.rowIndex="1">
+         <children>
+            <TextField fx:id="lastNameField" promptText="Фамилия" />
+            <TextField fx:id="ticketNumberField" promptText="Номер билета" />
+            <Button alignment="CENTER" onAction="#addTicket" prefHeight="26.0" prefWidth="140.0" text="Добавить билет" />
+         </children>
       </HBox>
    </children>
 </GridPane>

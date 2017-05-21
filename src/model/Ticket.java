@@ -35,11 +35,15 @@ public class Ticket {
         this.id = id;
     }
 
-    public Ticket(String lastName, String number, String date, String flightNumber, int jobId) {
+    public Ticket(String lastName, String number, String date, String flightNumber) {
         this.lastName = new SimpleStringProperty(lastName);
         this.number = new SimpleStringProperty(number);
         this.date = new SimpleObjectProperty<>(LocalDate.parse(date));
         this.flightNumber = new SimpleStringProperty(flightNumber);
+    }
+
+    public Ticket(String lastName, String number, String date, String flightNumber, int jobId) {
+        this(lastName, number, date, flightNumber);
         this.jobId = jobId;
     }
 

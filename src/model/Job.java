@@ -2,6 +2,7 @@ package model;
 
 import handlers.DbHandler;
 import javafx.beans.property.*;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.time.Instant;
@@ -23,7 +24,7 @@ public class Job {
     private transient final ObjectProperty<JobState> state;
     private transient final ObjectProperty<LocalDateTime> departureDate;
     private transient final IntegerProperty priorToReg;
-    private SimpleListProperty<Ticket> tickets = new SimpleListProperty<>(this, "tickets");
+    private ObservableList<Ticket> tickets = FXCollections.observableArrayList();
 
     public Job() {
         this.name = new SimpleStringProperty("Job#" + (DbHandler.getInstance().getJobsCount() + 1));
@@ -113,10 +114,6 @@ public class Job {
     }
 
     public ObservableList<Ticket> getTickets() {
-        return tickets.get();
-    }
-
-    public SimpleListProperty<Ticket> ticketsProperty() {
         return tickets;
     }
 
@@ -125,7 +122,7 @@ public class Job {
     }
 
     public void setTickets(ObservableList<Ticket> tickets) {
-        this.tickets.set(tickets);
+        this.tickets = tickets;
     }
 
     public synchronized void save() {
@@ -134,5 +131,9 @@ public class Job {
 
     public static Job get(int id) {
         return DbHandler.getInstance().getJob(id);
+    }
+
+    public void addTicket(Ticket ticket) {
+        tickets.add(ticket);
     }
 }

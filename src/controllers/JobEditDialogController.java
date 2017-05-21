@@ -37,6 +37,12 @@ public class JobEditDialogController {
     @FXML
     private TextField priorToRegField;
     @FXML
+    private TextField flightNumberField;
+    @FXML
+    private TextField lastNameField;
+    @FXML
+    private TextField ticketNumberField;
+    @FXML
     private TableView<Ticket> ticketTable;
     @FXML
     private TableColumn<Ticket, String> lastNameCol;
@@ -199,10 +205,18 @@ public class JobEditDialogController {
 
         populateJobFields();
 
-        if (validateJob()) {
-            job.setState(JobState.NEW);
-            dialogStage.close();
+        if (!validateJob()) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.initOwner(dialogStage);
+            alert.setTitle("Ошибка");
+            alert.setHeaderText(null);
+            alert.setContentText("Пожалуйста, заполните все поля и добавьте хотя бы один билет");
+            alert.showAndWait();
+            return;
         }
+
+        job.setState(JobState.NEW);
+        dialogStage.close();
     }
 
     private void populateJobFields() {
@@ -215,23 +229,28 @@ public class JobEditDialogController {
             job.setDepartureDate(LocalDateTime.of(departureDatePicker.getValue(), LocalTime.parse(departureTimeField.getText())));
         }
 
-        for (Ticket ticket : tickets) {
-            ticket.setDate(job.getDepartureDate().toLocalDate());
-
-            if (job.getId() > 0) {
-                ticket.setJobId(job.getId());
-            }
-        }
-
         if (tickets.size() > 0) {
-            job.setTickets(tickets);
+            for (Ticket ticket : tickets) {
+                ticket.setDate(job.getDepartureDate().toLocalDate());
+
+                if (job.getId() > 0) {
+                    ticket.setJobId(job.getId());
+                }
+
+                job.addTicket(ticket);
+            }
+        } else {
+            if (lastNameField.getText().length() > 0 && ticketNumberField.getText().length() > 0) {
+                Ticket ticket = new Ticket(lastNameField.getText(), ticketNumberField.getText(), departureDatePicker.getValue().toString(), flightNumberField.getText());
+                job.addTicket(ticket);
+            }
         }
 
         job.setPriorToReg(Integer.valueOf(priorToRegField.getText()));
     }
 
     private boolean validateJob() {
-        return job.getName() != null && job.getDepartureDate() != null;
+        return job.getName() != null && job.getDepartureDate() != null && job.getTickets().size() > 0;
     }
 
     public void handleCancel() {
