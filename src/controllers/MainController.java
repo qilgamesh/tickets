@@ -2,7 +2,6 @@ package controllers;
 
 import handlers.JobHandler;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -76,6 +75,12 @@ public class MainController {
         });
 
         jobsTable.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> updateButton.setDisable(newValue == null));
+        jobsTable.setOnMouseClicked(mouseEvent -> {
+            if (mouseEvent.getClickCount() > 1) {
+                handleUpdateJob();
+            }
+        });
+
         jobsTable.setItems(this.jobs);
     }
 
