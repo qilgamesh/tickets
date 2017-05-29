@@ -2,6 +2,7 @@ package model;
 
 import handlers.DbHandler;
 import javafx.beans.property.*;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -9,6 +10,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
 
 /**
@@ -141,6 +143,11 @@ public class Job {
     }
 
     public void setTickets(ObservableList<Ticket> tickets) {
+
+        for (Ticket ticket : tickets) {
+            ticket.setJobId(this.id);
+        }
+
         this.tickets = tickets;
     }
 
@@ -158,15 +165,11 @@ public class Job {
 
     public boolean validate() {
 
-        if (getTickets().size() == 0) {
-            return false;
-        }
-
         if (getPriorToReg() == 0) {
             return false;
         }
 
-        if (getDepartureDate().isBefore(LocalDateTime.now())) {
+        if (getDepartureDate() == null) {
             return false;
         }
 

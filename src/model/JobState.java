@@ -10,11 +10,11 @@ public enum JobState {
     ACTIVE("Активно"),
     ARCHIVED("Архивный"),
     EDITABLE("Редактируется"),
-    EMPTY(""),
-    COMPLETED("Завершено"),
-    NEW("Новое"),
+    ERROR("Ошибка"),
     CHECKIN("Регистрация"),
-    ERROR("Ошибка");
+    COMPLETED("Завершено"),
+    READY("Готов к регистрации"),
+    NEW("Новое");
 
     private String description;
 

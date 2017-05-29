@@ -1,8 +1,10 @@
 package model;
 
 import handlers.DbHandler;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ObservableValue;
 
 /**
  * Created by Andrey Semenyuk on 2017.
@@ -93,5 +95,9 @@ public class Ticket {
 
     public void delete() {
         DbHandler.getInstance().deleteTicket(id);
+    }
+
+    public ObservableValue<Boolean> checkInProperty() {
+        return new SimpleBooleanProperty(true);
     }
 }

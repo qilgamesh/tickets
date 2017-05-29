@@ -64,7 +64,6 @@ public class JobHandler {
             while (change.next()) {
                 if (change.wasAdded()) {
                     change.getAddedSubList().forEach(job -> {
-                        job.save();
                         scheduleJob(job);
                         logger.info("Added job name: " + job.getName());
                     });
@@ -84,11 +83,14 @@ public class JobHandler {
 
         Long delay = job.getDepartureDateTimestamp() - DateTimeProcessor.getCurrentSecond() - job.getPriorToReg() * 3600;
 
-        if (job.getState() != JobState.NEW) {
-            if (delay < 0) {
+        if (delay < 0) {
+            if (job.getState() != JobState.COMPLETED) {
                 job.setState(JobState.COMPLETED);
                 job.save();
             }
+        }
+
+        if (job.getState() != JobState.NEW) {
             return;
         }
 
@@ -131,8 +133,6 @@ public class JobHandler {
      */
     public void updateJob(Job job) {
         removeJob(job);
-        job.save();
-        job.setState(JobState.NEW);
         scheduleJob(job);
     }
 

@@ -160,7 +160,7 @@ public class MainController {
 
             // Create the dialog Stage.
             Stage dialogStage = new Stage();
-            dialogStage.setTitle("Редактирование транзакции");
+            dialogStage.setTitle("Редактирование задания");
             dialogStage.initModality(Modality.WINDOW_MODAL);
             dialogStage.setResizable(false);
             dialogStage.initOwner(primaryStage);

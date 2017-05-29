@@ -87,6 +87,8 @@
         <columns>
           <TableColumn fx:id="lastNameCol" prefWidth="138.0" text="Фамилия" />
           <TableColumn fx:id="numberCol" prefWidth="151.0" text="№ билета" />
+            <TableColumn fx:id="placeCol" prefWidth="151.0" text="Место" />
+            <TableColumn fx:id="checkInCol" prefWidth="151.0" text="Регистрация" />
         </columns>
          <columnResizePolicy>
             <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
@@ -111,7 +113,7 @@
       </HBox>
       <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="20.0" GridPane.rowIndex="1">
          <children>
-            <TextField fx:id="lastNameField" promptText="Фамилия" />
+            <TextField fx:id="lastNameField" promptText="Фамилия пассажира" />
             <TextField fx:id="ticketNumberField" promptText="Номер билета" />
             <Button alignment="CENTER" onAction="#addTicket" prefHeight="26.0" prefWidth="140.0" text="Добавить билет" />
          </children>

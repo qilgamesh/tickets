@@ -3,20 +3,33 @@ package controllers;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.Stage;
-import javafx.util.Callback;
 import javafx.util.StringConverter;
 import model.Job;
 import model.JobState;
 import model.Ticket;
 
-import java.time.LocalDate;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.CookieHandler;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,6 +60,8 @@ public class JobEditDialogController {
     private TableColumn<Ticket, String> lastNameCol;
     @FXML
     private TableColumn<Ticket, String> numberCol;
+    @FXML
+    private TableColumn<Ticket, Boolean> checkInCol;
 
     private Stage dialogStage;
     private Job job;
@@ -59,14 +74,44 @@ public class JobEditDialogController {
     private void initialize() {
 
         ticketTable.setItems(tickets);
+
+        MenuItem item1 = new MenuItem("Удалить");
+        item1.setOnAction(event -> handleDeleteTicket());
+
+        ContextMenu contextMenu = new ContextMenu();
+        contextMenu.getItems().addAll(item1);
+
         lastNameCol.setCellValueFactory(cellData -> cellData.getValue().lastNameProperty());
         numberCol.setCellValueFactory(cellData -> cellData.getValue().numberProperty());
+        checkInCol.setCellValueFactory(cellData -> cellData.getValue().checkInProperty());
+
+        checkInCol.setCellFactory(column -> new TableCell<Ticket, Boolean>() {
+            final Button cellButton = new Button("Ручная");
+
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                cellButton.setOnAction(actionEvent -> handleCheckIn(job, (Ticket) getTableRow().getItem()));
+
+                if (item != null && !empty && job != null && job.getState() == JobState.COMPLETED) {
+                    setGraphic(cellButton);
+                }
+            }
+        });
 
         descriptionField.textProperty().addListener((observableValue, oldValue, newValue) -> {
             if (newValue == null || newValue.length() == 0) {
                 descriptionField.setStyle("-fx-border-color: red");
             } else {
                 descriptionField.setStyle("");
+            }
+        });
+
+        flightNumberField.textProperty().addListener((observableValue, oldValue, newValue) -> {
+            if (newValue == null || newValue.length() == 0) {
+                flightNumberField.setStyle("-fx-border-color: red");
+            } else {
+                flightNumberField.setStyle("");
             }
         });
 
@@ -134,6 +179,7 @@ public class JobEditDialogController {
         };
 
         departureTimeField.setTextFormatter(new TextFormatter<>(converterTimeField, LocalTime.now().format(DateTimeFormatter.ofPattern("HHmm")), filterTimeField));
+/*
 
         departureDatePicker.setDayCellFactory(new Callback<DatePicker, DateCell>() {
             @Override
@@ -159,7 +205,7 @@ public class JobEditDialogController {
                 departureDatePicker.setValue(LocalDate.now());
             }
         });
-
+*/
         priorToRegField.addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
             if (keyEvent.getCode() == KeyCode.DOWN) {
                 handleDecrement();
@@ -198,18 +244,48 @@ public class JobEditDialogController {
                 }
             }
         });
+
+        ticketTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        ticketTable.setContextMenu(contextMenu);
+        ticketTable.getContextMenu().setAutoHide(true);
+    }
+
+    private void handleDeleteTicket() {
+
+        ObservableList<Ticket> selectedTickets = FXCollections.observableArrayList(ticketTable.getSelectionModel().getSelectedItems());
+
+        for (Ticket ticket : selectedTickets) {
+            ticket.delete();
+        }
+
+        tickets.removeAll(selectedTickets);
+        ticketTable.refresh();
     }
 
     public void handleSave() {
 
         populateJobFields();
 
-        if (!validateJob()) {
+        boolean jobHasErrors = !job.validate();
+
+        if (jobHasErrors || tickets.size() == 0) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.initOwner(dialogStage);
             alert.setTitle("Ошибка");
             alert.setHeaderText(null);
-            alert.setContentText("Пожалуйста, заполните все поля и добавьте хотя бы один билет");
+
+            if (jobHasErrors && tickets.size() == 0) {
+                alert.setContentText("Пожалуйста, заполните все поля и добавьте хотя бы один билет");
+            } else {
+                if (jobHasErrors) {
+                    alert.setContentText("Пожалуйста, заполните все поля");
+                }
+
+                if (tickets.size() == 0) {
+                    alert.setContentText("Пожалуйста, добавьте хотя бы один билет");
+                }
+            }
+
             alert.showAndWait();
             return;
         }
@@ -232,37 +308,12 @@ public class JobEditDialogController {
             job.setFlightNumber(flightNumberField.getText());
         }
 
-        if (tickets.size() > 0) {
-            for (Ticket ticket : tickets) {
-                if (job.getId() > 0) {
-                    ticket.setJobId(job.getId());
-                }
-            }
-
-            job.setTickets(tickets);
-        } else {
-            if (lastNameField.getText().length() > 0 && ticketNumberField.getText().length() > 0) {
-                Ticket ticket = new Ticket(lastNameField.getText(), ticketNumberField.getText());
-                job.addTicket(ticket);
-            }
+        if (tickets.size() == 0) {
+            addTicket();
         }
 
+        job.setTickets(tickets);
         job.setPriorToReg(Integer.valueOf(priorToRegField.getText()));
-    }
-
-    private boolean validateJob() {
-        return job.validate() && validateTickets();
-    }
-
-    private boolean validateTickets() {
-
-        for (Ticket ticket : job.getTickets()) {
-            if (!ticket.validate()) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     public void handleCancel() {
@@ -305,7 +356,16 @@ public class JobEditDialogController {
 
     public void addTicket() {
 
-        if (lastNameField.getText() != null && ticketNumberField.getText() != null) {
+        if (lastNameField.getText().length() > 0 && ticketNumberField.getText().length() > 0) {
+
+            for (Ticket ticket : tickets) {
+                if (ticket.getNumber().equals(ticketNumberField.getText())) {
+                    ticketNumberField.setStyle("-fx-border-color: red");
+                    return;
+                }
+            }
+
+            ticketNumberField.setStyle("");
 
             Ticket ticket = new Ticket(lastNameField.getText(), ticketNumberField.getText());
 
@@ -316,6 +376,7 @@ public class JobEditDialogController {
             tickets.add(ticket);
             lastNameField.clear();
             ticketNumberField.clear();
+            ticketTable.refresh();
         }
     }
 
@@ -342,4 +403,124 @@ public class JobEditDialogController {
 
         priorToRegField.setText((--value).toString());
     }
+
+    private String updateCookie(HttpURLConnection connection, String oldValue) {
+
+        StringBuilder sb = new StringBuilder();
+        List<String> cookies = connection.getHeaderFields().get("Set-Cookie");
+
+        if (cookies == null) {
+            return oldValue;
+        }
+
+        for (String cookie : cookies) {
+            if (sb.length() > 0) {
+                sb.append("; ");
+            }
+
+            String value = cookie.split(";")[0];
+            sb.append(value);
+        }
+
+        return sb.toString();
+    }
+
+    private void handleCheckIn(Job job, Ticket ticket) {
+
+        String baseUrl = "http://checkin.azurair.com/oxygen-check-in/json/";
+        String params = "lastName=" + ticket.getLastName() + "&number=" + ticket.getNumber() + "&date=" +
+                job.getDepartureDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "&flight=" + job.getFlightNumber();
+
+        String cookieHeader = "JSESSIONID=541C3EAB31D86A528626A9874CB88584";
+
+        try {
+            URL url = new URL(baseUrl + "clear-session");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+            if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                if (!response.toString().contains("\"result\":\"ok\"")) {
+                    System.out.println("ERROR: " + response);
+                    return;
+                }
+            }
+
+            cookieHeader = updateCookie(connection, cookieHeader);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            URL url = new URL(baseUrl + "add-to-order?" + params);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+            if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                if (!response.toString().contains("\"result\":\"OK\"")) {
+                    System.out.println("ERROR: " + response);
+                    return;
+                }
+            }
+
+            cookieHeader = updateCookie(connection, cookieHeader);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            URL url = new URL(baseUrl + "order-info?" + params);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestProperty("Cookie", cookieHeader);
+            cookieHeader = updateCookie(connection, cookieHeader);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            URL url = new URL(baseUrl + "select-passengers?selected=%7B%22orderParts%22%3A%5B%7B%22passengers%22%3A%5Btrue%5D%7D%5D%7D");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestProperty("Cookie", cookieHeader);
+            cookieHeader = updateCookie(connection, cookieHeader);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        WebView browser = new WebView();
+        WebEngine webEngine = browser.getEngine();
+        String uri = "http://checkin.azurair.com/oxygen-check-in/#boardingPass";
+        Map<String, List<String>> headers = new LinkedHashMap<>();
+        headers.put("Set-Cookie", Arrays.asList(cookieHeader));
+
+        try {
+            CookieHandler.getDefault().put(URI.create("http://checkin.azurair.com/oxygen-check-in/"), headers);
+            webEngine.load(uri);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        BorderPane page = new BorderPane(browser);
+        // Create the dialog Stage.
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Регистрация на рейс");
+        Scene scene = new Scene(page);
+        dialogStage.setScene(scene);
+        dialogStage.setWidth(1000);
+        dialogStage.showAndWait();
+    }
+
 }
