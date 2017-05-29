@@ -1,12 +1,8 @@
 package model;
 
 import handlers.DbHandler;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-
-import java.time.LocalDate;
 
 /**
  * Created by Andrey Semenyuk on 2017.
@@ -93,5 +89,9 @@ public class Ticket {
         }
 
         return true;
+    }
+
+    public void delete() {
+        DbHandler.getInstance().deleteTicket(id);
     }
 }

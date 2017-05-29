@@ -314,6 +314,26 @@ public class DbHandler {
         }
     }
 
+    /**
+     * Удаление билета из БД.
+     *
+     * @param id
+     */
+    public synchronized void deleteTicket(int id) {
+
+        if (id == 0) {
+            return;
+        }
+
+        try {
+            Statement statement = this.connection.createStatement();
+            statement.executeUpdate("DELETE FROM ticket WHERE id = " + id);
+
+        } catch (SQLException ex) {
+            logger.log(Level.SEVERE, "Failed to delete ticket", ex);
+        }
+    }
+
     public List<Airplane> getAirplanes() {
         List<Airplane> airplanes = new ArrayList<>();
 
