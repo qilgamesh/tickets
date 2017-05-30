@@ -59,6 +59,7 @@ public class MainController {
 
         nameCol.setCellValueFactory(cellData -> cellData.getValue().nameProperty());
         ticketsCol.setCellValueFactory(cellData -> cellData.getValue().ticketsCount());
+        ticketsCol.setStyle("-fx-alignment: CENTER;");
 
         DateTimeFormatter myDateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
         departureCol.setCellFactory(column -> new TableCell<Job, LocalDateTime>() {
@@ -102,9 +103,11 @@ public class MainController {
                 }
             }
         });
+        stateCol.setStyle("-fx-alignment: CENTER;");
 
         jobsTable.getSelectionModel().selectedItemProperty().addListener((observableValue, oldValue, newValue) -> updateButton.setDisable(newValue == null));
         jobsTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
         jobsTable.setContextMenu(contextMenu);
         jobsTable.getContextMenu().setAutoHide(true);
 

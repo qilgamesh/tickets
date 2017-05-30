@@ -83,14 +83,17 @@ public class JobEditDialogController {
 
         MenuItem item1 = new MenuItem("Удалить");
         item1.setOnAction(event -> handleDeleteTicket());
-
         ContextMenu contextMenu = new ContextMenu();
         contextMenu.getItems().addAll(item1);
 
         lastNameCol.setCellValueFactory(cellData -> cellData.getValue().lastNameProperty());
-        numberCol.setCellValueFactory(cellData -> cellData.getValue().numberProperty());
-        checkInCol.setCellValueFactory(cellData -> cellData.getValue().checkInProperty());
+        lastNameCol.setStyle("-fx-alignment: CENTER;");
 
+        numberCol.setCellValueFactory(cellData -> cellData.getValue().numberProperty());
+        numberCol.setStyle("-fx-alignment: CENTER;");
+
+        checkInCol.setCellValueFactory(cellData -> cellData.getValue().checkInProperty());
+        checkInCol.setStyle("-fx-alignment: CENTER;");
         checkInCol.setCellFactory(column -> new TableCell<Ticket, Boolean>() {
             final Button cellButton = new Button("Ручная");
 
@@ -98,7 +101,7 @@ public class JobEditDialogController {
             protected void updateItem(Boolean item, boolean empty) {
                 super.updateItem(item, empty);
                 cellButton.setOnAction(actionEvent -> handleCheckIn(job, (Ticket) getTableRow().getItem()));
-
+                cellButton.setMinWidth(100);
                 if (item != null && !empty && job != null && job.getState() == JobState.COMPLETED) {
                     setGraphic(cellButton);
                 }
