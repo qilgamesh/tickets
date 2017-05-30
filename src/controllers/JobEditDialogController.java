@@ -15,6 +15,7 @@ import javafx.util.StringConverter;
 import model.Job;
 import model.JobState;
 import model.Ticket;
+import utils.LogUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,6 +32,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.UnaryOperator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -69,6 +72,9 @@ public class JobEditDialogController {
 
     private static int MIN_PRIOR_TO_REG = 12;
     private static int MAX_PRIOR_TO_REG = 48;
+
+    private final static Logger logger = LogUtils.getLogger();
+
 
     @FXML
     private void initialize() {
@@ -268,25 +274,22 @@ public class JobEditDialogController {
 
         boolean jobHasErrors = !job.validate();
 
-        if (jobHasErrors || tickets.size() == 0) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.initOwner(dialogStage);
-            alert.setTitle("Ошибка");
-            alert.setHeaderText(null);
+        String errorMessage = null;
 
-            if (jobHasErrors && tickets.size() == 0) {
-                alert.setContentText("Пожалуйста, заполните все поля и добавьте хотя бы один билет");
-            } else {
-                if (jobHasErrors) {
-                    alert.setContentText("Пожалуйста, заполните все поля");
-                }
-
-                if (tickets.size() == 0) {
-                    alert.setContentText("Пожалуйста, добавьте хотя бы один билет");
-                }
+        if (jobHasErrors && tickets.size() == 0) {
+            errorMessage = "Пожалуйста, заполните все поля и добавьте хотя бы один билет";
+        } else {
+            if (jobHasErrors) {
+                errorMessage = "Пожалуйста, заполните все поля";
             }
 
-            alert.showAndWait();
+            if (tickets.size() == 0) {
+                errorMessage = "Пожалуйста, добавьте хотя бы один билет";
+            }
+        }
+
+        if (errorMessage != null) {
+            showErrorAlert(errorMessage);
             return;
         }
 
@@ -445,10 +448,11 @@ public class JobEditDialogController {
                 while ((inputLine = in.readLine()) != null) {
                     response.append(inputLine);
                 }
+
                 in.close();
 
                 if (!response.toString().contains("\"result\":\"ok\"")) {
-                    System.out.println("ERROR: " + response);
+                    logger.log(Level.SEVERE, "Failed to try clear session: " + response);
                     return;
                 }
             }
@@ -473,7 +477,14 @@ public class JobEditDialogController {
                 in.close();
 
                 if (!response.toString().contains("\"result\":\"OK\"")) {
-                    System.out.println("ERROR: " + response);
+                    String errorMessage = "Что-то пошло не так, попробуйте позже";
+
+                    if (response.toString().contains("orderNotFound")) {
+                        errorMessage = "Билет не найден или регистрация ещё не началась";
+                    }
+
+                    logger.log(Level.SEVERE,"Failed to checkin. Response: " + response);
+                    showErrorAlert(errorMessage);
                     return;
                 }
             }
@@ -513,14 +524,25 @@ public class JobEditDialogController {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         BorderPane page = new BorderPane(browser);
         // Create the dialog Stage.
         Stage dialogStage = new Stage();
         dialogStage.setTitle("Регистрация на рейс");
         Scene scene = new Scene(page);
         dialogStage.setScene(scene);
-        dialogStage.setWidth(1000);
+        dialogStage.setWidth(1200);
         dialogStage.showAndWait();
+    }
+
+    private void showErrorAlert(String errorMessage) {
+
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.initOwner(dialogStage);
+        alert.setTitle("Ошибка");
+        alert.setHeaderText(null);
+        alert.setContentText(errorMessage);
+        alert.showAndWait();
     }
 
 }
