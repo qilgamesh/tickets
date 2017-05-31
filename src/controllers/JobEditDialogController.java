@@ -299,6 +299,7 @@ public class JobEditDialogController {
         }
 
         job.setState(JobState.NEW);
+        job.save();
         dialogStage.close();
     }
 
