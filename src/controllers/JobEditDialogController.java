@@ -491,10 +491,10 @@ public class JobEditDialogController {
                 in.close();
 
                 if (!response.toString().contains("\"result\":\"OK\"")) {
-                    String errorMessage = "Что-то пошло не так, попробуйте позже";
+                    String errorMessage = "К сожалению, произошёл сбой обработки запроса. Попробуйте снова позже.";
 
                     if (response.toString().contains("orderNotFound")) {
-                        errorMessage = "Билет не найден или регистрация ещё не началась";
+                        errorMessage = "Билет не найден или регистрация ещё не началась.";
                     }
 
                     logger.log(Level.SEVERE,"Failed to checkin. Response: " + response);
