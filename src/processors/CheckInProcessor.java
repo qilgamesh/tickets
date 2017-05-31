@@ -1,5 +1,6 @@
 package processors;
 
+import handlers.PrefHandler;
 import model.Job;
 import model.JobState;
 import utils.LogUtils;
@@ -18,7 +19,6 @@ import java.util.logging.Logger;
  */
 public class CheckInProcessor implements Runnable {
 
-    private final static String BASE_URL = "https://api.telegram.org/bot312066192:AAHEbbCcYqkj463wVDIm0C8ou_sRMEPvbIc/sendMessage?chat_id=-228942046&parse_mode=HTML&text=";
     private final static Logger logger = LogUtils.getLogger();
 
     private Job job;
@@ -40,7 +40,7 @@ public class CheckInProcessor implements Runnable {
         try {
             String curTime = DateTimeProcessor.getCurrentDateTime().toLocalTime().toString();
             String message = URLEncoder.encode("<b>Старт:</b> " + job.getName() + ", <b>Время:</b> " + curTime, "UTF-8");
-            HttpsURLConnection connection = (HttpsURLConnection) new URL(BASE_URL + message).openConnection();
+            HttpsURLConnection connection = (HttpsURLConnection) new URL(getTelegramUrl(message)).openConnection();
             connection.addRequestProperty("User-Agent", "Tickets app");
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -60,5 +60,13 @@ public class CheckInProcessor implements Runnable {
             job.setState(JobState.ERROR);
             job.save();
         }
+    }
+
+    private String getTelegramUrl(String message) {
+
+        String token = PrefHandler.getInstance().getTelegramToken();
+        String chatId = PrefHandler.getInstance().getTelegramChatId();
+
+        return "https://api.telegram.org/bot" + token + "/sendMessage?chat_id=" + chatId + "&parse_mode=HTML&text=" + message;
     }
 }
