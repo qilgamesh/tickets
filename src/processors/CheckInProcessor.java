@@ -51,8 +51,6 @@ public class CheckInProcessor implements Runnable {
                 sb.append(line);
             }
 
-            logger.info("Job checkin result: " + sb.toString());
-
             job.setState(JobState.COMPLETED);
             job.save();
         } catch (IOException ex) {

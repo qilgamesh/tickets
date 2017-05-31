@@ -90,7 +90,7 @@ public class JobHandler {
             }
         }
 
-        if (job.getState() != JobState.NEW) {
+        if (job.getState() != JobState.NEW && job.getState() != JobState.ACTIVE) {
             return;
         }
 
@@ -146,6 +146,11 @@ public class JobHandler {
     }
 
     public void stopScheduler() {
+
+        for (Job job : runningJobs.keySet()) {
+            job.save();
+        }
+
         scheduler.shutdownNow();
     }
 }
