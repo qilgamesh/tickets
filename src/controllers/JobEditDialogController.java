@@ -64,6 +64,8 @@ public class JobEditDialogController {
     @FXML
     private TableColumn<Ticket, String> numberCol;
     @FXML
+    private TableColumn<Ticket, Boolean> placeCol;
+    @FXML
     private TableColumn<Ticket, Boolean> checkInCol;
 
     private Stage dialogStage;
@@ -372,6 +374,7 @@ public class JobEditDialogController {
             }
 
             ticketNumberField.setStyle("");
+            lastNameField.setStyle("");
 
             Ticket ticket = new Ticket(lastNameField.getText(), ticketNumberField.getText());
 
@@ -383,6 +386,14 @@ public class JobEditDialogController {
             lastNameField.clear();
             ticketNumberField.clear();
             ticketTable.refresh();
+        } else {
+            if (lastNameField.getText().length() == 0) {
+                lastNameField.setStyle("-fx-border-color: red");
+            }
+
+            if (ticketNumberField.getText().length() == 0) {
+                ticketNumberField.setStyle("-fx-border-color: red");
+            }
         }
     }
 
