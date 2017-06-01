@@ -309,6 +309,11 @@ public class DbHandler {
                 return;
             }
 
+            if (savedTicket == null) {
+                int id = statement.getGeneratedKeys().getInt(1);
+                ticket.setId(id);
+            }
+
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Failed to create statement", ex);
         }
