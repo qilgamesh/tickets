@@ -4,6 +4,7 @@ import handlers.PrefHandler;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import utils.LogUtils;
@@ -51,6 +52,8 @@ public class Main extends Application {
             prefs.saveAll();
             JobHandler.getInstance().stopScheduler();
         });
+
+        primaryStage.getIcons().add(new Image("icon.png"));
 
         primaryStage.show();
     }
