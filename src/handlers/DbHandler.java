@@ -2,9 +2,9 @@ package handlers;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import model.Airline;
 import model.Airplane;
 import model.Job;
-import model.JobState;
 import model.Ticket;
 import org.sqlite.JDBC;
 import utils.LogUtils;
@@ -12,10 +12,8 @@ import utils.LogUtils;
 import java.io.File;
 import java.io.InputStream;
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -85,7 +83,8 @@ public class DbHandler {
                             "'state' TEXT," +
                             "'departure_date' TIMESTAMP," +
                             "'prior_to_reg' INTEGER DEFAULT 24," +
-                            "'flight_number' TEXT);"
+                            "'flight_number' TEXT," +
+                            "'airline_id' INTEGER REFERENCES airline (id));"
             );
             statement.execute(
                     "CREATE TABLE IF NOT EXISTS 'airplane' (" +
@@ -102,6 +101,12 @@ public class DbHandler {
                             "'number' TEXT," +
                             "'date' TEXT," +
                             "'job_id' INTEGER REFERENCES job (id));"
+            );
+            statement.execute(
+                    "CREATE TABLE IF NOT EXISTS 'airline' (" +
+                            "'id' INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "'name' TEXT," +
+                            "'base_url' TEXT);"
             );
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, "Failed to create tables: ", ex);
@@ -151,9 +156,16 @@ public class DbHandler {
             ResultSet rs = statement.executeQuery("SELECT * FROM main.job WHERE NOT state = 'ARCHIVED';");
 
             while (rs.next()) {
-                Job job = new Job(rs.getInt("id"), rs.getString("name"), rs.getString("state"), rs.getString("departure_date"), rs.getString("flight_number"), rs.getInt("prior_to_reg"));
+                Job job = new Job(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("state"),
+                        rs.getString("departure_date"),
+                        rs.getString("flight_number"),
+                        rs.getInt("prior_to_reg"),
+                        rs.getInt("airline_id")
+                );
                 job.setTickets(getTicketByJobId(job.getId()));
-                job.setName("Job#" + job.getId());
                 jobs.add(job);
             }
         } catch (SQLException ex) {
@@ -232,10 +244,10 @@ public class DbHandler {
     public synchronized void saveJob(Job job) {
 
         Job savedJob = getJob(job.getId());
-        String smnt = "UPDATE job SET (name, state, departure_date, flight_number, prior_to_reg) = (?, ?, ?, ?, ?) WHERE id = " + job.getId() + ";";
+        String smnt = "UPDATE job SET (name, state, departure_date, flight_number, prior_to_reg, airline_id) = (?, ?, ?, ?, ?, ?) WHERE id = " + job.getId() + ";";
 
         if (savedJob == null) {
-            smnt = "INSERT INTO job (name, state, departure_date, flight_number, prior_to_reg) VALUES (?, ?, ?, ?, ?);";
+            smnt = "INSERT INTO job (name, state, departure_date, flight_number, prior_to_reg, airline_id) VALUES (?, ?, ?, ?, ?, ?);";
         }
 
         try {
@@ -245,6 +257,7 @@ public class DbHandler {
             statement.setString(3, String.valueOf(job.getDepartureDateTimestamp()));
             statement.setString(4, job.getFlightNumber());
             statement.setInt(5, job.getPriorToReg());
+            statement.setInt(6, job.getAirline().getId());
 
             if (statement.executeUpdate() == 0) {
                 logger.warning("Save job error");
@@ -353,5 +366,55 @@ public class DbHandler {
         }
 
         return airplanes;
+    }
+
+    /**
+     * Получение авиакомпании
+     * @param id идентификатор
+     * @return объект Airline или null
+     */
+    public Airline getAirline(int id) {
+        if (id == 0) {
+            return null;
+        }
+
+        try {
+            Statement statement = this.connection.createStatement();
+            ResultSet rs = statement.executeQuery("SELECT * FROM airline WHERE id = " + id);
+            rs.next();
+
+            return new Airline(id, rs.getString("name"), rs.getString("base_url"));
+
+        } catch (SQLException ex) {
+            logger.log(Level.SEVERE, "Failed to create statement", ex);
+        }
+
+        return null;
+    }
+
+    /**
+     * Получение списка доступных авиакомпаний
+     * @return ObservableList
+     */
+    public ObservableList<Airline> getAllAirlines() {
+        ObservableList<Airline> airlines = FXCollections.observableArrayList();
+
+        try (Statement statement = this.connection.createStatement()) {
+            ResultSet rs = statement.executeQuery("SELECT * FROM main.airline;");
+
+            while (rs.next()) {
+                airlines.add(
+                        new Airline(
+                                rs.getInt("id"),
+                                rs.getString("name"),
+                                rs.getString("base_url")
+                        )
+                );
+            }
+        } catch (SQLException ex) {
+            logger.log(Level.SEVERE, "Failed to get airlines: ", ex);
+        }
+
+        return airlines;
     }
 }

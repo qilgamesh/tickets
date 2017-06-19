@@ -1,5 +1,6 @@
 package controllers;
 
+import handlers.DbHandler;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -12,6 +13,7 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import model.Airline;
 import model.Job;
 import model.JobState;
 import model.Ticket;
@@ -27,7 +29,7 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +56,8 @@ public class JobEditDialogController {
     @FXML
     private TextField flightNumberField;
     @FXML
+    private ComboBox<Airline> airlineComboBox;
+    @FXML
     private TextField lastNameField;
     @FXML
     private TextField ticketNumberField;
@@ -71,6 +75,7 @@ public class JobEditDialogController {
     private Stage dialogStage;
     private Job job;
     private ObservableList<Ticket> tickets = FXCollections.observableArrayList();
+    private ObservableList<Airline> airlines = FXCollections.observableArrayList();
 
     private static int MIN_PRIOR_TO_REG = 12;
     private static int MAX_PRIOR_TO_REG = 48;
@@ -82,6 +87,7 @@ public class JobEditDialogController {
     private void initialize() {
 
         ticketTable.setItems(tickets);
+        airlines.setAll(DbHandler.getInstance().getAllAirlines());
 
         MenuItem item1 = new MenuItem("Удалить");
         item1.setOnAction(event -> handleDeleteTicket());
@@ -125,6 +131,8 @@ public class JobEditDialogController {
                 flightNumberField.setStyle("");
             }
         });
+
+        airlineComboBox.setItems(airlines);
 
         UnaryOperator<TextFormatter.Change> filterTimeField = change -> {
             if (!change.isContentChange()) {
@@ -323,6 +331,7 @@ public class JobEditDialogController {
 
         job.setTickets(tickets);
         job.setPriorToReg(Integer.valueOf(priorToRegField.getText()));
+        job.setAirline(airlineComboBox.getSelectionModel().getSelectedItem());
     }
 
     public void handleCancel() {
@@ -356,6 +365,10 @@ public class JobEditDialogController {
 
         if (job.getPriorToReg() != 24) {
             priorToRegField.setText(String.valueOf(job.getPriorToReg()));
+        }
+
+        if (job.getAirline() != null) {
+            airlineComboBox.getSelectionModel().select(job.getAirline());
         }
     }
 
@@ -445,14 +458,13 @@ public class JobEditDialogController {
 
     private void handleCheckIn(Job job, Ticket ticket) {
 
-        String baseUrl = "http://checkin.azurair.com/oxygen-check-in/json/";
-        String params = "lastName=" + ticket.getLastName() + "&number=" + ticket.getNumber() + "&date=" +
-                job.getDepartureDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) + "&flight=" + job.getFlightNumber();
+        String baseUrl = job.getAirline().getBaseUrl();
+        String params = String.format("lastName=%s&number=%s&date=%s&flight=%s", ticket.getLastName(), ticket.getNumber(), job.getDepartureDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")), job.getFlightNumber());
 
         String cookieHeader = "JSESSIONID=541C3EAB31D86A528626A9874CB88584";
 
         try {
-            URL url = new URL(baseUrl + "clear-session");
+            URL url = new URL(baseUrl + "json/clear-session");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
@@ -478,7 +490,7 @@ public class JobEditDialogController {
         }
 
         try {
-            URL url = new URL(baseUrl + "add-to-order?" + params);
+            URL url = new URL(baseUrl + "json/add-to-order?" + params);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
@@ -498,7 +510,7 @@ public class JobEditDialogController {
                         errorMessage = "Билет не найден или регистрация ещё не началась.";
                     }
 
-                    logger.log(Level.SEVERE,"Failed to checkin. Response: " + response);
+                    logger.log(Level.SEVERE, "Failed to checkin. Response: " + response);
                     showErrorAlert(errorMessage);
                     return;
                 }
@@ -510,7 +522,7 @@ public class JobEditDialogController {
         }
 
         try {
-            URL url = new URL(baseUrl + "order-info?" + params);
+            URL url = new URL(baseUrl + "json/order-info?" + params);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestProperty("Cookie", cookieHeader);
             cookieHeader = updateCookie(connection, cookieHeader);
@@ -519,7 +531,7 @@ public class JobEditDialogController {
         }
 
         try {
-            URL url = new URL(baseUrl + "select-passengers?selected=%7B%22orderParts%22%3A%5B%7B%22passengers%22%3A%5Btrue%5D%7D%5D%7D");
+            URL url = new URL(baseUrl + "json/select-passengers?selected=%7B%22orderParts%22%3A%5B%7B%22passengers%22%3A%5Btrue%5D%7D%5D%7D");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestProperty("Cookie", cookieHeader);
             cookieHeader = updateCookie(connection, cookieHeader);
@@ -529,12 +541,12 @@ public class JobEditDialogController {
 
         WebView browser = new WebView();
         WebEngine webEngine = browser.getEngine();
-        String uri = "http://checkin.azurair.com/oxygen-check-in/#boardingPass";
+        String uri = baseUrl + "#boardingPass";
         Map<String, List<String>> headers = new LinkedHashMap<>();
-        headers.put("Set-Cookie", Arrays.asList(cookieHeader));
+        headers.put("Set-Cookie", Collections.singletonList(cookieHeader));
 
         try {
-            CookieHandler.getDefault().put(URI.create("http://checkin.azurair.com/oxygen-check-in/"), headers);
+            CookieHandler.getDefault().put(URI.create(baseUrl), headers);
             webEngine.load(uri);
         } catch (IOException e) {
             e.printStackTrace();

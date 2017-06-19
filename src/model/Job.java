@@ -2,7 +2,6 @@ package model;
 
 import handlers.DbHandler;
 import javafx.beans.property.*;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -10,7 +9,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 
 
 /**
@@ -28,29 +26,36 @@ public class Job {
     private transient final StringProperty flightNumber;
     private transient final IntegerProperty priorToReg;
     private transient final LongProperty secondsToReg;
-
+    private transient final ObjectProperty<Airline> airline;
     private ObservableList<Ticket> tickets = FXCollections.observableArrayList();
 
     public Job() {
         this.name = new SimpleStringProperty("Job#" + (DbHandler.getInstance().getJobsCount() + 1));
         this.state = new SimpleObjectProperty<>(JobState.NEW);
+        this.airline = new SimpleObjectProperty<>();
         this.departureDate = new SimpleObjectProperty<>(null);
         this.flightNumber = new SimpleStringProperty(null);
         this.priorToReg = new SimpleIntegerProperty(24);
         this.secondsToReg = new SimpleLongProperty(0);
     }
 
-    public Job(String name, String state, LocalDateTime departureDate, String flightNumber, int priorToReg) {
+    public Job(String name, String state, LocalDateTime departureDate, String flightNumber, int priorToReg, int airlineId) {
         this.name = new SimpleStringProperty(name);
         this.state = new SimpleObjectProperty<>(JobState.valueOf(state));
         this.departureDate = new SimpleObjectProperty<>(departureDate);
         this.flightNumber = new SimpleStringProperty(flightNumber);
         this.priorToReg = new SimpleIntegerProperty(priorToReg);
+        this.airline = new SimpleObjectProperty<>(Airline.get(airlineId));
         this.secondsToReg = new SimpleLongProperty(0);
     }
 
     public Job(int id, String name, String state, String departureDateTimestamp, String flightNumber, int priorToReg) {
-        this(name, state, LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.valueOf(departureDateTimestamp)), ZoneId.of("GMT+5")), flightNumber, priorToReg);
+        this(name, state, LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.valueOf(departureDateTimestamp)), ZoneId.of("GMT+5")), flightNumber, priorToReg, 0);
+        this.id = id;
+    }
+
+    public Job(int id, String name, String state, String departureDateTimestamp, String flightNumber, int priorToReg, int airlineId) {
+        this(name, state, LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.valueOf(departureDateTimestamp)), ZoneId.of("GMT+5")), flightNumber, priorToReg, airlineId);
         this.id = id;
     }
 
@@ -149,6 +154,18 @@ public class Job {
         }
 
         this.tickets = tickets;
+    }
+
+    public Airline getAirline() {
+        return airline.get();
+    }
+
+    public ObjectProperty<Airline> airlineProperty() {
+        return airline;
+    }
+
+    public void setAirline(Airline airline) {
+        this.airline.set(airline);
     }
 
     public synchronized void save() {
